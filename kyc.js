@@ -1,12 +1,14 @@
 // ==========================================
-// POCKETCHAIN KYC SYSTEM - PROFESSIONAL
-// Know Your Customer Verification Module
+// POCKETCHAIN KYC SYSTEM - COMPLETE
+// With Working Camera Functionality
 // ==========================================
 
 class KYCSystem {
     constructor() {
         this.kycData = JSON.parse(localStorage.getItem('pocketchain_kyc') || '{}');
         this.kycQueue = JSON.parse(localStorage.getItem('pocketchain_kyc_queue') || '[]');
+        this.stream = null;
+        this.capturedImage = null;
         this.init();
     }
 
@@ -16,65 +18,9 @@ class KYCSystem {
     }
 
     setupEventListeners() {
-        // File upload previews
-        const idFile = document.getElementById('kycIdFile');
-        const selfieFile = document.getElementById('kycSelfieFile');
-        
-        if (idFile) {
-            idFile.addEventListener('change', (e) => this.handleFileSelect(e, 'idPreview', 'idFileName'));
-        }
-        if (selfieFile) {
-            selfieFile.addEventListener('change', (e) => this.handleFileSelect(e, 'selfiePreview', 'selfieFileName'));
-        }
-
-        // Form submission
         const form = document.getElementById('kycForm');
         if (form) {
             form.addEventListener('submit', (e) => this.handleKYCSubmit(e));
-        }
-    }
-
-    handleFileSelect(event, previewId, filenameId) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        // Validate file
-        const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
-        const maxSize = 5 * 1024 * 1024; // 5MB
-
-        if (!validTypes.includes(file.type)) {
-            showToast('Error', 'Invalid file type. Use JPG, PNG, or PDF', 'error');
-            event.target.value = '';
-            return;
-        }
-
-        if (file.size > maxSize) {
-            showToast('Error', 'File too large. Max 5MB allowed', 'error');
-            event.target.value = '';
-            return;
-        }
-
-        // Show preview for images
-        if (file.type.startsWith('image/')) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const preview = document.getElementById(previewId);
-                const filename = document.getElementById(filenameId);
-                if (preview) {
-                    preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
-                    preview.classList.add('has-preview');
-                }
-                if (filename) filename.textContent = file.name;
-            };
-            reader.readAsDataURL(file);
-        } else {
-            const preview = document.getElementById(previewId);
-            const filename = document.getElementById(filenameId);
-            if (preview) {
-                preview.innerHTML = `<div class="file-icon"><i class="fas fa-file-pdf"></i><span>PDF Document</span></div>`;
-                preview.classList.add('has-preview');
-            }
-            if (filename) filename.textContent = file.name;
         }
     }
 
@@ -102,7 +48,6 @@ class KYCSystem {
             id: Date.now()
         };
 
-        // Validation
         if (!formData.fullName || !formData.birthDate || !formData.nationality || 
             !formData.idType || !formData.idNumber || !formData.address || 
             !formData.city || !formData.country || !formData.phone) {
@@ -110,7 +55,6 @@ class KYCSystem {
             return;
         }
 
-        // Check if already submitted
         if (this.kycData[currentUser.id] && this.kycData[currentUser.id].status === 'pending') {
             showToast('Pending', 'Your KYC is already under review', 'error');
             return;
@@ -121,11 +65,9 @@ class KYCSystem {
             return;
         }
 
-        // Save KYC data
         this.kycData[currentUser.id] = formData;
         localStorage.setItem('pocketchain_kyc', JSON.stringify(this.kycData));
 
-        // Add to admin queue
         this.kycQueue.push({
             kycId: formData.id,
             userId: currentUser.id,
@@ -135,16 +77,12 @@ class KYCSystem {
         });
         localStorage.setItem('pocketchain_kyc_queue', JSON.stringify(this.kycQueue));
 
-        // Update UI
         this.updateKYCStatus();
         showToast('Submitted', 'KYC application submitted for review', 'success');
         
-        // Reset form
         document.getElementById('kycForm')?.reset();
         document.getElementById('idPreview')?.classList.remove('has-preview');
         document.getElementById('selfiePreview')?.classList.remove('has-preview');
-        document.getElementById('idFileName') && (document.getElementById('idFileName').textContent = 'No file selected');
-        document.getElementById('selfieFileName') && (document.getElementById('selfieFileName').textContent = 'No file selected');
     }
 
     updateKYCStatus() {
@@ -154,10 +92,9 @@ class KYCSystem {
         const statusBadge = document.getElementById('kycStatusBadge');
         const statusText = document.getElementById('kycStatusText');
         const kycForm = document.getElementById('kycForm');
-        const kycSubmitted = document.getElementById('kycSubmitted');
+        const kycSubmitted = document.getElementById('kycSubmittedView');
 
         if (!kycInfo) {
-            // Not submitted
             if (statusBadge) {
                 statusBadge.className = 'kyc-badge unverified';
                 statusBadge.innerHTML = '<i class="fas fa-times-circle"></i> Not Verified';
@@ -166,7 +103,6 @@ class KYCSystem {
             if (kycForm) kycForm.style.display = 'block';
             if (kycSubmitted) kycSubmitted.style.display = 'none';
         } else if (kycInfo.status === 'pending') {
-            // Pending
             if (statusBadge) {
                 statusBadge.className = 'kyc-badge pending';
                 statusBadge.innerHTML = '<i class="fas fa-clock"></i> Under Review';
@@ -185,7 +121,6 @@ class KYCSystem {
                 `;
             }
         } else if (kycInfo.status === 'verified') {
-            // Verified
             if (statusBadge) {
                 statusBadge.className = 'kyc-badge verified';
                 statusBadge.innerHTML = '<i class="fas fa-check-circle"></i> Verified';
@@ -203,64 +138,109 @@ class KYCSystem {
                     </div>
                 `;
             }
-        } else if (kycInfo.status === 'rejected') {
-            // Rejected
-            if (statusBadge) {
-                statusBadge.className = 'kyc-badge rejected';
-                statusBadge.innerHTML = '<i class="fas fa-times-circle"></i> Rejected';
-            }
-            if (statusText) statusText.textContent = kycInfo.rejectionReason || 'Please resubmit with correct documents';
-            if (kycForm) kycForm.style.display = 'block';
-            if (kycSubmitted) kycSubmitted.style.display = 'none';
         }
     }
 
-    // Admin functions
-    static approveKYC(userId) {
-        const kycData = JSON.parse(localStorage.getItem('pocketchain_kyc') || '{}');
-        if (kycData[userId]) {
-            kycData[userId].status = 'verified';
-            kycData[userId].verifiedAt = new Date().toISOString();
-            kycData[userId].verifiedBy = 'admin';
-            localStorage.setItem('pocketchain_kyc', JSON.stringify(kycData));
+    // Camera Functions
+    async openCamera() {
+        try {
+            this.stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    facingMode: 'user',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                } 
+            });
             
-            // Update queue
-            const queue = JSON.parse(localStorage.getItem('pocketchain_kyc_queue') || '[]');
-            const idx = queue.findIndex(q => q.userId === userId);
-            if (idx !== -1) {
-                queue[idx].status = 'verified';
-                localStorage.setItem('pocketchain_kyc_queue', JSON.stringify(queue));
+            const video = document.getElementById('cameraVideo');
+            const canvas = document.getElementById('cameraCanvas');
+            
+            if (video) {
+                video.srcObject = this.stream;
+                video.style.display = 'block';
             }
+            if (canvas) canvas.style.display = 'none';
             
-            return true;
+            document.getElementById('captureBtn').style.display = 'block';
+            document.getElementById('retakeBtn').style.display = 'none';
+            document.getElementById('confirmBtn').style.display = 'none';
+            
+        } catch (err) {
+            console.error('Camera error:', err);
+            showToast('Error', 'Could not access camera. Please allow camera permissions.', 'error');
         }
-        return false;
     }
 
-    static rejectKYC(userId, reason) {
-        const kycData = JSON.parse(localStorage.getItem('pocketchain_kyc') || '{}');
-        if (kycData[userId]) {
-            kycData[userId].status = 'rejected';
-            kycData[userId].rejectionReason = reason;
-            kycData[userId].rejectedAt = new Date().toISOString();
-            localStorage.setItem('pocketchain_kyc', JSON.stringify(kycData));
-            
-            // Update queue
-            const queue = JSON.parse(localStorage.getItem('pocketchain_kyc_queue') || '[]');
-            const idx = queue.findIndex(q => q.userId === userId);
-            if (idx !== -1) {
-                queue[idx].status = 'rejected';
-                localStorage.setItem('pocketchain_kyc_queue', JSON.stringify(queue));
-            }
-            
-            return true;
+    closeCamera() {
+        if (this.stream) {
+            this.stream.getTracks().forEach(track => track.stop());
+            this.stream = null;
         }
-        return false;
     }
 
-    static getKYCStatus(userId) {
-        const kycData = JSON.parse(localStorage.getItem('pocketchain_kyc') || '{}');
-        return kycData[userId] || null;
+    capturePhoto() {
+        const video = document.getElementById('cameraVideo');
+        const canvas = document.getElementById('cameraCanvas');
+        
+        if (!video || !canvas) return;
+        
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        video.style.display = 'none';
+        canvas.style.display = 'block';
+        
+        this.capturedImage = canvas.toDataURL('image/jpeg', 0.9);
+        
+        document.getElementById('captureBtn').style.display = 'none';
+        document.getElementById('retakeBtn').style.display = 'block';
+        document.getElementById('confirmBtn').style.display = 'block';
+    }
+
+    retakePhoto() {
+        const video = document.getElementById('cameraVideo');
+        const canvas = document.getElementById('cameraCanvas');
+        
+        if (video) video.style.display = 'block';
+        if (canvas) canvas.style.display = 'none';
+        
+        this.capturedImage = null;
+        
+        document.getElementById('captureBtn').style.display = 'block';
+        document.getElementById('retakeBtn').style.display = 'none';
+        document.getElementById('confirmBtn').style.display = 'none';
+    }
+
+    confirmPhoto() {
+        if (!this.capturedImage) return;
+        
+        const preview = document.getElementById('selfiePreview');
+        const filename = document.getElementById('selfieFileName');
+        
+        if (preview) {
+            preview.innerHTML = `<img src="${this.capturedImage}" alt="Selfie Preview">`;
+            preview.classList.add('has-preview');
+        }
+        if (filename) filename.textContent = 'selfie_capture.jpg';
+        
+        const selfieInput = document.getElementById('kycSelfieFile');
+        if (selfieInput) {
+            fetch(this.capturedImage)
+                .then(res => res.blob())
+                .then(blob => {
+                    const file = new File([blob], 'selfie_capture.jpg', { type: 'image/jpeg' });
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    selfieInput.files = dataTransfer.files;
+                });
+        }
+        
+        this.closeCamera();
+        closeCameraModal();
+        showToast('Success', 'Selfie captured successfully');
     }
 }
 
@@ -282,4 +262,73 @@ function openKYCModal() {
 function closeKYCModal() {
     const modal = document.getElementById('kycModal');
     if (modal) modal.classList.remove('active');
+}
+
+function handleKYCFile(input, previewId, filenameId) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+    const maxSize = 5 * 1024 * 1024;
+
+    if (!validTypes.includes(file.type)) {
+        showToast('Error', 'Invalid file type. Use JPG, PNG, or PDF', 'error');
+        input.value = '';
+        return;
+    }
+
+    if (file.size > maxSize) {
+        showToast('Error', 'File too large. Max 5MB allowed', 'error');
+        input.value = '';
+        return;
+    }
+
+    const preview = document.getElementById(previewId);
+    const filename = document.getElementById(filenameId);
+    
+    if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            if (preview) {
+                preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+                preview.classList.add('has-preview');
+            }
+        };
+        reader.readAsDataURL(file);
+    } else {
+        if (preview) {
+            preview.innerHTML = `<div class="file-icon"><i class="fas fa-file-pdf"></i><span>PDF Document</span></div>`;
+            preview.classList.add('has-preview');
+        }
+    }
+    
+    if (filename) filename.textContent = file.name;
+}
+
+function openCameraModal() {
+    const modal = document.getElementById('cameraModal');
+    if (modal) {
+        modal.classList.add('active');
+        kycSystem.openCamera();
+    }
+}
+
+function closeCameraModal() {
+    const modal = document.getElementById('cameraModal');
+    if (modal) {
+        modal.classList.remove('active');
+        kycSystem.closeCamera();
+    }
+}
+
+function capturePhoto() {
+    kycSystem.capturePhoto();
+}
+
+function retakePhoto() {
+    kycSystem.retakePhoto();
+}
+
+function confirmPhoto() {
+    kycSystem.confirmPhoto();
 }
