@@ -1,25 +1,52 @@
 // ==========================================
-// POCKETCHAIN (PCH) - PROFESSIONAL DEFI PLATFORM
-// UPDATED: Airdrop Referral, Attendance Streak, Convert, KYC, Enhanced Signup
+// POCKETCHAIN - COMPLETE JAVASCRIPT
+// WITH ALL MODIFICATIONS
 // ==========================================
 
 // --- STATE MANAGEMENT ---
 let currentUser = null;
 let walletConnected = false;
 let walletAddress = null;
+let walletType = null;
 let walletBalance = 10000;
 let selectedPool = null;
 let selectedAPY = 0;
 let selectedPeriod = 0;
 let isDarkMode = localStorage.getItem('pocketchain_darkmode') !== 'false';
+let currentChain = 'onchain';
+let convertDirection = 'pchToCrypto';
 
-// Data Storage
-let stakes = JSON.parse(localStorage.getItem('pocketchain_stakes') || '[]');
-let users = JSON.parse(localStorage.getItem('pocketchain_users') || '[]');
-let completedTasks = JSON.parse(localStorage.getItem('pocketchain_tasks') || '[]');
-let transactions = JSON.parse(localStorage.getItem('pocketchain_transactions') || '[]');
-let attendanceData = JSON.parse(localStorage.getItem('pocketchain_attendance') || '{}');
-let referrals = JSON.parse(localStorage.getItem('pocketchain_referrals') || '{}');
+// Data Storage with User Isolation
+function getUserStorageKey(key) {
+    if (!currentUser) return `pocketchain_${key}`;
+    return `pocketchain_${key}_user${currentUser.id}`;
+}
+
+// Initialize user data
+function initUserData() {
+    if (!currentUser) return;
+    
+    const keys = ['onchain_balance', 'offchain_balance', 'stakes', 'tasks', 'transactions', 'attendance', 'referrals'];
+    keys.forEach(key => {
+        const userKey = getUserStorageKey(key);
+        if (localStorage.getItem(userKey) === null) {
+            localStorage.setItem(userKey, JSON.stringify(key === 'onchain_balance' || key === 'offchain_balance' ? 10000 : []));
+        }
+    });
+}
+
+// Get user-specific data
+function getUserData(key) {
+    const userKey = getUserStorageKey(key);
+    const data = localStorage.getItem(userKey);
+    return data ? JSON.parse(data) : (key.includes('balance') ? 10000 : []);
+}
+
+// Set user-specific data
+function setUserData(key, value) {
+    const userKey = getUserStorageKey(key);
+    localStorage.setItem(userKey, JSON.stringify(value));
+}
 
 // Admin Credentials
 const ADMIN_CREDENTIALS = { 
@@ -36,7 +63,7 @@ const TOKEN_CONFIG = {
     price: 0.045
 };
 
-// Conversion rates (mock)
+// Conversion rates
 const CONVERSION_RATES = {
     USDT: 0.045,
     USDC: 0.045,
@@ -62,7 +89,11 @@ document.addEventListener('DOMContentLoaded', () => {
     initPasswordStrength();
     initDateSync();
     
-    // Ensure menu is closed on load
+    if (currentUser) {
+        initUserData();
+        loadChainData();
+    }
+    
     const menu = document.getElementById('sideMenu');
     const overlay = document.getElementById('overlay');
     if (menu) menu.classList.remove('open');
@@ -134,7 +165,7 @@ function calculatePasswordStrength(password) {
     return score;
 }
 
-// --- DATE SYNC FOR AGE ---
+// --- DATE SYNC ---
 function initDateSync() {
     const daySelect = document.getElementById('regDay');
     const monthSelect = document.getElementById('regMonth');
@@ -143,7 +174,6 @@ function initDateSync() {
     
     if (!daySelect || !monthSelect || !yearSelect || !ageInput) return;
     
-    // Populate days
     for (let i = 1; i <= 31; i++) {
         const option = document.createElement('option');
         option.value = i;
@@ -151,7 +181,6 @@ function initDateSync() {
         daySelect.appendChild(option);
     }
     
-    // Populate months
     const months = ['January', 'February', 'March', 'April', 'May', 'June', 
                     'July', 'August', 'September', 'October', 'November', 'December'];
     months.forEach((month, idx) => {
@@ -161,7 +190,6 @@ function initDateSync() {
         monthSelect.appendChild(option);
     });
     
-    // Populate years (18-100 years old)
     const currentYear = new Date().getFullYear();
     for (let i = currentYear - 18; i >= currentYear - 100; i--) {
         const option = document.createElement('option');
@@ -170,7 +198,6 @@ function initDateSync() {
         yearSelect.appendChild(option);
     }
     
-    // Calculate age on change
     function calculateAge() {
         const day = parseInt(daySelect.value);
         const month = parseInt(monthSelect.value) - 1;
@@ -195,6 +222,45 @@ function initDateSync() {
     yearSelect.addEventListener('change', calculateAge);
 }
 
+// --- CHAIN TOGGLE SYSTEM ---
+function switchChain(chain) {
+    currentChain = chain;
+    
+    document.getElementById('onchainBtn').classList.toggle('active', chain === 'onchain');
+    document.getElementById('offchainBtn').classList.toggle('active', chain === 'offchain');
+    
+    loadChainData();
+    showToast('Switched', `Now viewing ${chain} assets`);
+}
+
+function loadChainData() {
+    if (!currentUser) return;
+    
+    const balance = getUserData(`${currentChain}_balance`);
+    document.getElementById('availableBalance').textContent = balance.toFixed(2) + ' PCH';
+    updateTotalBalance();
+    updateTransactionHistory();
+}
+
+function updateTotalBalance() {
+    if (!currentUser) return;
+    
+    const onchain = getUserData('onchain_balance');
+    const offchain = getUserData('offchain_balance');
+    const stakes = getUserData('stakes');
+    const staked = stakes.filter(s => !s.claimed).reduce((sum, s) => sum + s.amount, 0);
+    const rewards = stakes.filter(s => !s.claimed).reduce((sum, s) => sum + s.earnings, 0);
+    
+    const total = onchain + offchain + staked + rewards;
+    document.getElementById('totalBalance').textContent = total.toFixed(2) + ' PCH';
+    document.getElementById('stakedBalance').textContent = staked.toFixed(2) + ' PCH';
+    document.getElementById('rewardsBalance').textContent = rewards.toFixed(2) + ' PCH';
+    
+    const rate = TOKEN_CONFIG.price;
+    const assetSub = document.querySelector('.asset-sub');
+    if (assetSub) assetSub.textContent = `≈ $${(total * rate).toFixed(2)} USD`;
+}
+
 // --- REFERRAL SYSTEM ---
 function initReferralSystem() {
     updateReferralUI();
@@ -207,16 +273,17 @@ function generateReferralCode() {
 
 function getReferralCode() {
     if (!currentUser) return null;
-    if (!referrals[currentUser.id]) {
-        referrals[currentUser.id] = {
+    let referrals = getUserData('referrals');
+    if (!referrals.code) {
+        referrals = {
             code: generateReferralCode(),
             invited: [],
             rewards: 0,
             createdAt: new Date().toISOString()
         };
-        localStorage.setItem('pocketchain_referrals', JSON.stringify(referrals));
+        setUserData('referrals', referrals);
     }
-    return referrals[currentUser.id].code;
+    return referrals.code;
 }
 
 function copyReferralCode() {
@@ -237,7 +304,7 @@ function updateReferralUI() {
     if (!currentUser) return;
     
     const code = getReferralCode();
-    const userReferrals = referrals[currentUser.id] || { invited: [], rewards: 0 };
+    const referrals = getUserData('referrals');
     
     const codeDisplay = document.getElementById('referralCodeDisplay');
     const invitedCount = document.getElementById('invitedCount');
@@ -245,14 +312,14 @@ function updateReferralUI() {
     const inviteList = document.getElementById('inviteList');
     
     if (codeDisplay) codeDisplay.textContent = code;
-    if (invitedCount) invitedCount.textContent = userReferrals.invited.length;
-    if (referralRewards) referralRewards.textContent = `${userReferrals.rewards} PCH`;
+    if (invitedCount) invitedCount.textContent = referrals.invited.length;
+    if (referralRewards) referralRewards.textContent = `${referrals.rewards} PCH`;
     
     if (inviteList) {
-        if (userReferrals.invited.length === 0) {
+        if (referrals.invited.length === 0) {
             inviteList.innerHTML = '<p class="empty-invites">No invites yet. Share your code!</p>';
         } else {
-            inviteList.innerHTML = userReferrals.invited.map(inv => `
+            inviteList.innerHTML = referrals.invited.map(inv => `
                 <div class="invite-item">
                     <span>${inv.email}</span>
                     <span class="invite-status">${inv.status}</span>
@@ -272,10 +339,10 @@ function checkDailyAttendance() {
     if (!currentUser) return;
     
     const today = new Date().toDateString();
-    const userId = currentUser.id;
+    let attendance = getUserData('attendance');
     
-    if (!attendanceData[userId]) {
-        attendanceData[userId] = {
+    if (!attendance.lastClaim) {
+        attendance = {
             lastClaim: null,
             streak: 0,
             totalClaims: 0,
@@ -283,21 +350,9 @@ function checkDailyAttendance() {
         };
     }
     
-    const userAttendance = attendanceData[userId];
-    const lastClaim = userAttendance.lastClaim ? new Date(userAttendance.lastClaim) : null;
+    const lastClaim = attendance.lastClaim ? new Date(attendance.lastClaim) : null;
     
-    // Check if can claim (new day)
     if (!lastClaim || new Date().toDateString() !== lastClaim.toDateString()) {
-        // Check if streak continues (claimed yesterday)
-        if (lastClaim) {
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            if (lastClaim.toDateString() !== yesterday.toDateString()) {
-                userAttendance.streak = 0; // Reset streak
-            }
-        }
-        
-        // Enable claim button
         const claimBtn = document.getElementById('dailyClaimBtn');
         if (claimBtn) {
             claimBtn.disabled = false;
@@ -305,7 +360,6 @@ function checkDailyAttendance() {
             claimBtn.classList.remove('claimed');
         }
     } else {
-        // Already claimed today
         const claimBtn = document.getElementById('dailyClaimBtn');
         if (claimBtn) {
             claimBtn.disabled = true;
@@ -314,7 +368,7 @@ function checkDailyAttendance() {
         }
     }
     
-    localStorage.setItem('pocketchain_attendance', JSON.stringify(attendanceData));
+    setUserData('attendance', attendance);
 }
 
 function claimDailyReward() {
@@ -324,47 +378,50 @@ function claimDailyReward() {
     }
     
     const today = new Date().toDateString();
-    const userId = currentUser.id;
-    const userAttendance = attendanceData[userId];
+    let attendance = getUserData('attendance');
     
-    // Check if already claimed
-    if (userAttendance.lastClaim && new Date(userAttendance.lastClaim).toDateString() === today) {
+    if (attendance.lastClaim && new Date(attendance.lastClaim).toDateString() === today) {
         showToast('Error', 'Already claimed today', 'error');
         return;
     }
     
-    // Update streak
-    userAttendance.streak++;
-    userAttendance.lastClaim = new Date().toISOString();
-    userAttendance.totalClaims++;
-    userAttendance.history.push({
+    if (attendance.lastClaim) {
+        const lastClaim = new Date(attendance.lastClaim);
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        if (lastClaim.toDateString() !== yesterday.toDateString()) {
+            attendance.streak = 0;
+        }
+    }
+    
+    attendance.streak++;
+    attendance.lastClaim = new Date().toISOString();
+    attendance.totalClaims++;
+    attendance.history.push({
         date: new Date().toISOString(),
         reward: 1,
-        streak: userAttendance.streak
+        streak: attendance.streak
     });
     
-    // Calculate reward
-    let reward = 1; // Base 1 PCH
+    setUserData('attendance', attendance);
+    
+    let reward = 1;
     let bonus = 0;
     
-    // 7-day streak bonus
-    if (userAttendance.streak % 7 === 0) {
+    if (attendance.streak % 7 === 0) {
         bonus = 5;
         reward += bonus;
         showToast('Streak Bonus!', `7-day streak! +${bonus} PCH bonus!`, 'success');
     }
     
-    // Add to wallet
-    walletBalance += reward;
-    updateWalletDisplays();
+    const balance = getUserData(`${currentChain}_balance`);
+    setUserData(`${currentChain}_balance`, balance + reward);
+    
     recordTransaction('Daily Claim', reward, 'Completed');
     
-    // Save attendance
-    localStorage.setItem('pocketchain_attendance', JSON.stringify(attendanceData));
-    
-    // Update UI
     updateAttendanceUI();
     checkDailyAttendance();
+    loadChainData();
     
     const bonusMsg = bonus > 0 ? ` (+${bonus} bonus)` : '';
     showToast('Claimed!', `+${reward} PCH${bonusMsg}`, 'success');
@@ -373,277 +430,20 @@ function claimDailyReward() {
 function updateAttendanceUI() {
     if (!currentUser) return;
     
-    const userAttendance = attendanceData[currentUser.id] || { streak: 0, totalClaims: 0 };
+    const attendance = getUserData('attendance');
     
     const streakDisplay = document.getElementById('attendanceStreak');
     const totalClaims = document.getElementById('totalClaims');
     const nextBonus = document.getElementById('nextBonus');
     
-    if (streakDisplay) streakDisplay.textContent = `${userAttendance.streak} days`;
-    if (totalClaims) totalClaims.textContent = userAttendance.totalClaims;
+    if (streakDisplay) streakDisplay.textContent = attendance.streak || 0;
+    if (totalClaims) totalClaims.textContent = attendance.totalClaims || 0;
     
     if (nextBonus) {
-        const daysUntilBonus = 7 - (userAttendance.streak % 7);
+        const streak = attendance.streak || 0;
+        const daysUntilBonus = 7 - (streak % 7);
         nextBonus.textContent = daysUntilBonus === 7 ? 'Bonus Ready!' : `${daysUntilBonus} days`;
     }
-}
-
-// --- CONVERT SYSTEM ---
-function openConvertModal() {
-    if (!walletConnected) {
-        showToast('Error', 'Connect wallet first', 'error');
-        return;
-    }
-    
-    const modal = document.getElementById('convertModal');
-    if (modal) {
-        modal.classList.add('active');
-        updateConvertRates();
-    }
-}
-
-function closeConvertModal() {
-    const modal = document.getElementById('convertModal');
-    if (modal) modal.classList.remove('active');
-}
-
-function updateConvertRates() {
-    const pchAmount = parseFloat(document.getElementById('convertFromAmount')?.value) || 0;
-    const toCurrency = document.getElementById('convertToCurrency')?.value || 'USDT';
-    
-    if (pchAmount <= 0) {
-        document.getElementById('convertToAmount').value = '0.00';
-        return;
-    }
-    
-    const rate = CONVERSION_RATES[toCurrency];
-    const result = (pchAmount * rate).toFixed(toCurrency === 'BTC' || toCurrency === 'ETH' ? 8 : 2);
-    document.getElementById('convertToAmount').value = result;
-}
-
-function executeConvert() {
-    const pchAmount = parseFloat(document.getElementById('convertFromAmount')?.value);
-    const toCurrency = document.getElementById('convertToCurrency')?.value;
-    
-    if (!pchAmount || pchAmount <= 0) {
-        showToast('Error', 'Enter valid amount', 'error');
-        return;
-    }
-    
-    if (pchAmount > walletBalance) {
-        showToast('Error', 'Insufficient PCH balance', 'error');
-        return;
-    }
-    
-    const rate = CONVERSION_RATES[toCurrency];
-    const convertedAmount = (pchAmount * rate).toFixed(toCurrency === 'BTC' || toCurrency === 'ETH' ? 8 : 2);
-    
-    // Deduct PCH
-    walletBalance -= pchAmount;
-    updateWalletDisplays();
-    
-    // Record transaction
-    recordTransaction(`Convert to ${toCurrency}`, -pchAmount, 'Completed');
-    
-    // Add to convert history
-    const history = JSON.parse(localStorage.getItem('pocketchain_convert_history') || '[]');
-    history.unshift({
-        from: 'PCH',
-        to: toCurrency,
-        fromAmount: pchAmount,
-        toAmount: convertedAmount,
-        rate: rate,
-        date: new Date().toISOString(),
-        txId: 'TX' + Date.now()
-    });
-    localStorage.setItem('pocketchain_convert_history', JSON.stringify(history));
-    
-    closeConvertModal();
-    showToast('Converted!', `${pchAmount} PCH → ${convertedAmount} ${toCurrency}`, 'success');
-    
-    // Reset form
-    document.getElementById('convertFromAmount').value = '';
-    document.getElementById('convertToAmount').value = '0.00';
-}
-
-// --- EVENT LISTENERS ---
-function setupEventListeners() {
-    // Stake amount input listener
-    const stakeInput = document.getElementById('stakeAmountPro');
-    if (stakeInput) {
-        stakeInput.addEventListener('input', calculateProEarnings);
-    }
-    
-    // Convert listeners
-    const convertFrom = document.getElementById('convertFromAmount');
-    const convertCurrency = document.getElementById('convertToCurrency');
-    if (convertFrom) convertFrom.addEventListener('input', updateConvertRates);
-    if (convertCurrency) convertCurrency.addEventListener('change', updateConvertRates);
-    
-    // Close modals on outside click
-    document.addEventListener('click', function(event) {
-        if (event.target.classList.contains('modal') && event.target.classList.contains('active')) {
-            if (event.target === event.target.closest('.modal')) {
-                closeAllModals();
-            }
-        }
-    });
-    
-    // Escape key to close modals
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape') {
-            closeAllModals();
-            const menu = document.getElementById('sideMenu');
-            const overlay = document.getElementById('overlay');
-            if (menu && menu.classList.contains('open')) {
-                menu.classList.remove('open');
-                if (overlay) overlay.classList.remove('active');
-            }
-        }
-    });
-}
-
-function closeAllModals() {
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        modal.classList.remove('active');
-    });
-}
-
-// --- AUTHENTICATION STATE ---
-function checkAuthState() {
-    const savedUser = localStorage.getItem('pocketchain_currentUser');
-    if (savedUser) {
-        currentUser = JSON.parse(savedUser);
-        showPrivateUI();
-    } else {
-        showPublicUI();
-    }
-    
-    // Check saved wallet
-    const savedWallet = localStorage.getItem('pocketchain_wallet');
-    if (savedWallet) {
-        const wallet = JSON.parse(savedWallet);
-        if (wallet.connected) {
-            walletConnected = true;
-            walletAddress = wallet.address;
-            walletBalance = wallet.balance || 10000;
-            updateWalletButton();
-            updateWalletDisplays();
-        }
-    }
-    
-    // Update theme button visibility
-    updateThemeButtonVisibility();
-}
-
-function updateThemeButtonVisibility() {
-    const themeBtn = document.getElementById('themeToggleBtn');
-    if (themeBtn) {
-        themeBtn.style.display = 'flex';
-    }
-}
-
-function showPrivateUI() {
-    const publicMenu = document.getElementById('publicMenu');
-    const loginMenu = document.getElementById('loginMenu');
-    const privateMenu = document.getElementById('privateMenu');
-    const accountMenu = document.getElementById('accountMenu');
-    
-    if (publicMenu) publicMenu.classList.add('hidden');
-    if (loginMenu) loginMenu.classList.add('hidden');
-    
-    if (privateMenu) privateMenu.classList.remove('hidden');
-    if (accountMenu) accountMenu.classList.remove('hidden');
-    
-    updateAccountInfo();
-    updateAttendanceUI();
-    updateReferralUI();
-    initAttendanceSystem();
-    
-    showPage('asset');
-}
-
-function showPublicUI() {
-    const publicMenu = document.getElementById('publicMenu');
-    const loginMenu = document.getElementById('loginMenu');
-    const privateMenu = document.getElementById('privateMenu');
-    const accountMenu = document.getElementById('accountMenu');
-    
-    if (publicMenu) publicMenu.classList.remove('hidden');
-    if (loginMenu) loginMenu.classList.remove('hidden');
-    
-    if (privateMenu) privateMenu.classList.add('hidden');
-    if (accountMenu) accountMenu.classList.add('hidden');
-    
-    showPage('home');
-    updateThemeButtonVisibility();
-}
-
-// --- MENU & NAVIGATION ---
-function toggleMenu() {
-    const menu = document.getElementById('sideMenu');
-    const overlay = document.getElementById('overlay');
-    
-    if (!menu) return;
-    
-    const isOpen = menu.classList.contains('open');
-    
-    if (isOpen) {
-        menu.classList.remove('open');
-        if (overlay) overlay.classList.remove('active');
-        document.body.style.overflow = '';
-    } else {
-        menu.classList.add('open');
-        if (overlay) overlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-}
-
-function showPage(pageId) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('#sideMenu a').forEach(a => a.classList.remove('active'));
-    
-    const page = document.getElementById(pageId);
-    if (page) {
-        page.classList.add('active');
-    } else {
-        return;
-    }
-    
-    const navMap = {
-        'home': 'nav-home',
-        'tokenomics': 'nav-tokenomics',
-        'asset': 'nav-asset',
-        'staking': 'nav-staking',
-        'market': 'nav-market',
-        'airdrop': 'nav-airdrop',
-        'account': 'nav-account'
-    };
-    
-    Object.values(navMap).forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.remove('active');
-    });
-    
-    if (navMap[pageId]) {
-        const navEl = document.getElementById(navMap[pageId]);
-        if (navEl) navEl.classList.add('active');
-    }
-    
-    const menu = document.getElementById('sideMenu');
-    if (menu && menu.classList.contains('open')) {
-        toggleMenu();
-    }
-    
-    if (pageId === 'asset') updateAssetPage();
-    if (pageId === 'staking') updateStakingPage();
-    if (pageId === 'market') initPriceChart();
-    if (pageId === 'airdrop') updateAirdropPage();
-    if (pageId === 'account') updateAccountInfo();
-    if (pageId === 'tokenomics') initTokenomicsChart();
-    
-    window.scrollTo(0, 0);
 }
 
 // --- WALLET FUNCTIONS ---
@@ -652,9 +452,7 @@ function openWalletModal() {
         disconnectWallet();
     } else {
         const modal = document.getElementById('walletModal');
-        if (modal) {
-            modal.classList.add('active');
-        }
+        if (modal) modal.classList.add('active');
     }
 }
 
@@ -665,16 +463,15 @@ function closeWalletModal() {
 
 function connectWallet(type) {
     walletConnected = true;
+    walletType = type;
     walletAddress = '0x' + Array(40).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
     
     updateWalletButton();
-    updateWalletDisplays();
     
-    localStorage.setItem('pocketchain_wallet', JSON.stringify({
-        address: walletAddress,
-        balance: walletBalance,
-        connected: true
-    }));
+    if (window.onWalletConnected) {
+        window.onWalletConnected();
+        window.onWalletConnected = null;
+    }
     
     closeWalletModal();
     showToast('Wallet Connected', `${type.charAt(0).toUpperCase() + type.slice(1)} connected successfully`);
@@ -697,152 +494,76 @@ function updateWalletButton() {
 function disconnectWallet(silent = false) {
     walletConnected = false;
     walletAddress = null;
+    walletType = null;
     
     updateWalletButton();
-    
-    const stakeDisplay = document.getElementById('stakeBalanceDisplay');
-    const receiveInput = document.getElementById('receiveAddress');
-    
-    if (stakeDisplay) stakeDisplay.textContent = '0.00';
-    if (receiveInput) receiveInput.value = 'Not connected';
-    
-    localStorage.removeItem('pocketchain_wallet');
     
     if (!silent) showToast('Disconnected', 'Wallet disconnected');
 }
 
-function updateWalletDisplays() {
-    if (!walletAddress) return;
-    
-    const displays = {
-        'stakeBalanceDisplay': walletBalance.toFixed(2),
-        'receiveAddress': walletAddress
-    };
-    
-    Object.entries(displays).forEach(([id, value]) => {
-        const el = document.getElementById(id);
-        if (el) {
-            if (id === 'receiveAddress') {
-                el.value = value;
-            } else {
-                el.textContent = value;
-            }
-        }
-    });
-}
-
-// --- ASSET PAGE ---
-function updateAssetPage() {
-    const totalStaked = stakes.filter(s => !s.claimed).reduce((sum, s) => sum + s.amount, 0);
-    const totalRewards = stakes.filter(s => !s.claimed).reduce((sum, s) => sum + s.earnings, 0);
-    const available = walletBalance;
-    const total = available + totalStaked + totalRewards;
-    
-    const totalBalance = document.getElementById('totalBalance');
-    const availableBalance = document.getElementById('availableBalance');
-    const stakedBalance = document.getElementById('stakedBalance');
-    const rewardsBalance = document.getElementById('rewardsBalance');
-    
-    if (totalBalance) totalBalance.textContent = formatTokenAmount(total);
-    if (availableBalance) availableBalance.textContent = formatTokenAmount(available);
-    if (stakedBalance) stakedBalance.textContent = formatTokenAmount(totalStaked);
-    if (rewardsBalance) rewardsBalance.textContent = formatTokenAmount(totalRewards);
-    
-    const rate = TOKEN_CONFIG.price;
-    const assetSub = document.querySelector('.asset-sub');
-    if (assetSub) assetSub.textContent = `≈ $${(total * rate).toFixed(2)} USD`;
-    
-    updateTransactionHistory();
-}
-
-function formatTokenAmount(amount) {
-    return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' PCH';
-}
-
-function updateTransactionHistory() {
-    const container = document.getElementById('transactionHistory');
-    if (!container) return;
-    
-    if (transactions.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-exchange-alt"></i>
-                <p>No transactions yet</p>
-            </div>
-        `;
-        return;
-    }
-    
-    container.innerHTML = transactions.slice(0, 10).map(tx => `
-        <div class="tx-row">
-            <div class="tx-info">
-                <div class="tx-type">${tx.type}</div>
-                <div class="tx-date">${new Date(tx.date).toLocaleDateString()}</div>
-            </div>
-            <div class="tx-amount-section">
-                <div class="tx-amount ${tx.amount > 0 ? 'positive' : 'negative'}">${tx.amount > 0 ? '+' : ''}${tx.amount} PCH</div>
-                <div class="tx-status">${tx.status}</div>
-            </div>
-        </div>
-    `).join('');
-}
-
-// Send/Receive/Withdraw
+// --- SEND/RECEIVE ---
 function openSendModal() {
-    if (!walletConnected) {
-        showToast('Error', 'Connect wallet first', 'error');
+    if (!currentUser) {
+        showToast('Error', 'Please login first', 'error');
         return;
     }
+    
     const modal = document.getElementById('sendModal');
-    if (modal) modal.classList.add('active');
+    if (modal) {
+        modal.classList.add('active');
+        document.getElementById('sendChainBadge').textContent = currentChain === 'onchain' ? 'Onchain' : 'Offchain';
+        
+        const balance = getUserData(`${currentChain}_balance`);
+        document.getElementById('sendAvailableBalance').textContent = balance.toFixed(2);
+    }
 }
 
 function closeSendModal() {
     const modal = document.getElementById('sendModal');
     if (modal) modal.classList.remove('active');
     
-    const address = document.getElementById('sendAddress');
-    const amount = document.getElementById('sendAmount');
-    if (address) address.value = '';
-    if (amount) amount.value = '';
+    document.getElementById('sendAddress').value = '';
+    document.getElementById('sendAmount').value = '';
 }
 
 function executeSend() {
-    const address = document.getElementById('sendAddress');
-    const amount = document.getElementById('sendAmount');
+    const address = document.getElementById('sendAddress').value.trim();
+    const amount = parseFloat(document.getElementById('sendAmount').value);
     
-    if (!address || !amount) return;
-    
-    const addressVal = address.value.trim();
-    const amountVal = parseFloat(amount.value);
-    
-    if (!addressVal || !amountVal || amountVal <= 0) {
+    if (!address || !amount || amount <= 0) {
         showToast('Error', 'Invalid input', 'error');
         return;
     }
     
-    if (amountVal > walletBalance) {
+    const balance = getUserData(`${currentChain}_balance`);
+    if (amount > balance) {
         showToast('Error', 'Insufficient balance', 'error');
         return;
     }
     
-    walletBalance -= amountVal;
-    updateWalletDisplays();
+    setUserData(`${currentChain}_balance`, balance - amount);
+    recordTransaction(`Send (${currentChain})`, -amount, 'Completed');
     
-    recordTransaction('Send', -amountVal, 'Completed');
-    
+    loadChainData();
     closeSendModal();
-    updateAssetPage();
-    showToast('Success', `Sent ${amountVal} PCH`);
+    showToast('Success', `Sent ${amount} PCH on ${currentChain}`);
 }
 
 function openReceiveModal() {
-    if (!walletConnected) {
-        showToast('Error', 'Connect wallet first', 'error');
+    if (!currentUser) {
+        showToast('Error', 'Please login first', 'error');
         return;
     }
+    
     const modal = document.getElementById('receiveModal');
-    if (modal) modal.classList.add('active');
+    if (modal) {
+        modal.classList.add('active');
+        document.getElementById('receiveChainBadge').textContent = currentChain === 'onchain' ? 'Onchain' : 'Offchain';
+        
+        const address = generateUserAddress();
+        document.getElementById('receiveAddress').value = address;
+        document.getElementById('receiveQR').textContent = address.substring(0, 20) + '...';
+    }
 }
 
 function closeReceiveModal() {
@@ -850,24 +571,146 @@ function closeReceiveModal() {
     if (modal) modal.classList.remove('active');
 }
 
+function generateUserAddress() {
+    if (!currentUser) return 'Not connected';
+    const base = currentChain === 'onchain' ? '0x' : 'off';
+    const hash = (currentUser.id * 9999).toString(16).substring(0, 8);
+    return `${base}${hash}...${currentUser.email.substring(0, 4)}`;
+}
+
 function copyAddress() {
-    if (!walletAddress) return;
+    const address = document.getElementById('receiveAddress').value;
+    if (!address || address === 'Not connected') return;
     
-    navigator.clipboard.writeText(walletAddress).then(() => {
+    navigator.clipboard.writeText(address).then(() => {
         showToast('Copied', 'Address copied to clipboard');
-    }).catch(() => {
-        const input = document.getElementById('receiveAddress');
-        if (input) {
-            input.select();
-            document.execCommand('copy');
-            showToast('Copied', 'Address copied to clipboard');
-        }
     });
 }
 
+// --- BIDIRECTIONAL CONVERT ---
+function openConvertModal() {
+    if (!currentUser) {
+        showToast('Error', 'Please login first', 'error');
+        return;
+    }
+    
+    const modal = document.getElementById('convertModal');
+    if (modal) {
+        modal.classList.add('active');
+        updateConvertRates();
+    }
+}
+
+function closeConvertModal() {
+    const modal = document.getElementById('convertModal');
+    if (modal) modal.classList.remove('active');
+}
+
+function setConvertDirection(direction) {
+    convertDirection = direction;
+    
+    document.getElementById('pchToCryptoBtn').classList.toggle('active', direction === 'pchToCrypto');
+    document.getElementById('cryptoToPchBtn').classList.toggle('active', direction === 'cryptoToPch');
+    
+    const fromLabel = document.getElementById('convertFromLabel');
+    const toLabel = document.getElementById('convertToLabel');
+    
+    if (direction === 'pchToCrypto') {
+        fromLabel.textContent = 'From (PCH)';
+        toLabel.textContent = 'To';
+    } else {
+        fromLabel.textContent = 'From';
+        toLabel.textContent = 'To (PCH)';
+    }
+    
+    updateConvertRates();
+}
+
+function swapConvertDirection() {
+    setConvertDirection(convertDirection === 'pchToCrypto' ? 'cryptoToPch' : 'pchToCrypto');
+}
+
+function updateConvertRates() {
+    const amount = parseFloat(document.getElementById('convertFromAmount').value) || 0;
+    const currency = document.getElementById('convertToCurrency').value;
+    
+    if (amount <= 0) {
+        document.getElementById('convertToAmount').textContent = '0.00';
+        return;
+    }
+    
+    const rate = CONVERSION_RATES[currency];
+    let result;
+    
+    if (convertDirection === 'pchToCrypto') {
+        result = (amount * rate).toFixed(currency === 'BTC' || currency === 'ETH' ? 8 : 2);
+        document.getElementById('convertRateText').textContent = `Rate: 1 PCH = ${rate} ${currency}`;
+    } else {
+        result = (amount / rate).toFixed(2);
+        document.getElementById('convertRateText').textContent = `Rate: 1 ${currency} = ${(1/rate).toFixed(2)} PCH`;
+    }
+    
+    document.getElementById('convertToAmount').textContent = result + ' ' + (convertDirection === 'pchToCrypto' ? currency : 'PCH');
+}
+
+function executeConvert() {
+    const amount = parseFloat(document.getElementById('convertFromAmount').value);
+    const currency = document.getElementById('convertToCurrency').value;
+    
+    if (!amount || amount <= 0) {
+        showToast('Error', 'Enter valid amount', 'error');
+        return;
+    }
+    
+    const balance = getUserData(`${currentChain}_balance`);
+    
+    if (convertDirection === 'pchToCrypto') {
+        if (amount > balance) {
+            showToast('Error', 'Insufficient PCH balance', 'error');
+            return;
+        }
+        
+        setUserData(`${currentChain}_balance`, balance - amount);
+        const rate = CONVERSION_RATES[currency];
+        const received = (amount * rate).toFixed(currency === 'BTC' || currency === 'ETH' ? 8 : 2);
+        
+        recordTransaction(`Convert PCH→${currency}`, -amount, 'Completed');
+        showToast('Converted!', `${amount} PCH → ${received} ${currency}`);
+    } else {
+        const rate = CONVERSION_RATES[currency];
+        const pchReceived = (amount / rate);
+        
+        setUserData(`${currentChain}_balance`, balance + pchReceived);
+        recordTransaction(`Convert ${currency}→PCH`, pchReceived, 'Completed');
+        showToast('Converted!', `${amount} ${currency} → ${pchReceived.toFixed(2)} PCH`);
+    }
+    
+    loadChainData();
+    closeConvertModal();
+    document.getElementById('convertFromAmount').value = '';
+    document.getElementById('convertToAmount').textContent = '0.00';
+}
+
+// --- WITHDRAW WITH WALLET INTEGRATION ---
 function openWithdrawModal() {
+    if (!currentUser) {
+        showToast('Error', 'Please login first', 'error');
+        return;
+    }
+    
     const modal = document.getElementById('withdrawModal');
-    if (modal) modal.classList.add('active');
+    if (modal) {
+        modal.classList.add('active');
+        updateWithdrawWalletStatus();
+        
+        const balance = getUserData(`${currentChain}_balance`);
+        document.getElementById('withdrawAvailableBalance').textContent = balance.toFixed(2);
+        
+        document.getElementById('withdrawAmount').oninput = function() {
+            const amt = parseFloat(this.value) || 0;
+            document.getElementById('totalDeduction').textContent = (amt + 0.5).toFixed(2) + ' PCH';
+        };
+    }
 }
 
 function closeWithdrawModal() {
@@ -875,9 +718,69 @@ function closeWithdrawModal() {
     if (modal) modal.classList.remove('active');
 }
 
+function updateWithdrawWalletStatus() {
+    const statusBox = document.getElementById('withdrawWalletStatus');
+    const submitBtn = document.getElementById('withdrawSubmitBtn');
+    const addressInput = document.getElementById('withdrawAddress');
+    
+    if (walletConnected && walletAddress) {
+        statusBox.innerHTML = `<i class="fas fa-check-circle" style="color: var(--secondary);"></i>
+            <div class="wallet-status-text">
+                <span>Connected: ${walletAddress.substring(0, 6)}...${walletAddress.substring(38)}</span>
+                <button class="btn-secondary btn-small" onclick="disconnectWalletForWithdraw()">Disconnect</button>
+            </div>`;
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Withdraw Now';
+        addressInput.value = walletAddress;
+    } else {
+        statusBox.innerHTML = `<i class="fas fa-wallet"></i>
+            <div class="wallet-status-text">
+                <span>No wallet connected</span>
+                <button class="btn-primary btn-small" onclick="connectWalletForWithdraw()">Connect Wallet</button>
+            </div>`;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Connect Wallet to Withdraw';
+        addressInput.value = '';
+    }
+}
+
+function connectWalletForWithdraw() {
+    openWalletModal();
+    window.onWalletConnected = function() {
+        updateWithdrawWalletStatus();
+    };
+}
+
+function disconnectWalletForWithdraw() {
+    disconnectWallet();
+    updateWithdrawWalletStatus();
+}
+
+function executeWithdraw() {
+    const amount = parseFloat(document.getElementById('withdrawAmount').value);
+    
+    if (!amount || amount <= 0) {
+        showToast('Error', 'Enter valid amount', 'error');
+        return;
+    }
+    
+    const balance = getUserData(`${currentChain}_balance`);
+    
+    if (amount + 0.5 > balance) {
+        showToast('Error', 'Insufficient balance (including fee)', 'error');
+        return;
+    }
+    
+    setUserData(`${currentChain}_balance`, balance - amount - 0.5);
+    recordTransaction(`Withdraw to Wallet`, -(amount + 0.5), 'Completed');
+    
+    loadChainData();
+    closeWithdrawModal();
+    showToast('Withdrawal Initiated', `${amount} PCH sent to your wallet`);
+}
+
 // --- STAKING PRO ---
 function updateStakingPage() {
-    updateWalletDisplays();
     updateActivePositions();
 }
 
@@ -899,13 +802,15 @@ function selectPool(element, period, apy) {
 }
 
 function setMaxStake() {
-    if (!walletConnected) {
-        showToast('Error', 'Connect wallet first', 'error');
+    if (!currentUser) {
+        showToast('Error', 'Please login first', 'error');
         return;
     }
+    
+    const balance = getUserData(`${currentChain}_balance`);
     const input = document.getElementById('stakeAmountPro');
     if (input) {
-        input.value = walletBalance.toFixed(2);
+        input.value = balance.toFixed(2);
         calculateProEarnings();
     }
 }
@@ -931,7 +836,8 @@ function calculateProEarnings() {
         if (earnPreview) earnPreview.style.display = 'block';
         
         if (errorEl) {
-            if (amount > walletBalance) {
+            const balance = getUserData(`${currentChain}_balance`);
+            if (amount > balance) {
                 errorEl.classList.add('show');
             } else {
                 errorEl.classList.remove('show');
@@ -943,12 +849,8 @@ function calculateProEarnings() {
 }
 
 function stakePro() {
-    if (!walletConnected) {
-        showToast('Error', 'Connect wallet first', 'error');
-        return;
-    }
     if (!currentUser) {
-        showToast('Error', 'Login required', 'error');
+        showToast('Error', 'Please login first', 'error');
         return;
     }
     
@@ -965,7 +867,9 @@ function stakePro() {
         showToast('Error', 'Select a pool', 'error');
         return;
     }
-    if (amount > walletBalance) {
+    
+    const balance = getUserData(`${currentChain}_balance`);
+    if (amount > balance) {
         showToast('Error', 'Insufficient balance', 'error');
         return;
     }
@@ -976,12 +880,13 @@ function stakePro() {
         return;
     }
     
-    walletBalance -= amount;
-    updateWalletDisplays();
+    setUserData(`${currentChain}_balance`, balance - amount);
     
     const earnings = amount * (selectedAPY / 100) * (selectedPeriod / 365);
+    const stakes = getUserData('stakes');
     const stake = {
         id: Date.now(),
+        userId: currentUser.id,
         amount: amount,
         period: selectedPool,
         apy: selectedAPY,
@@ -992,7 +897,7 @@ function stakePro() {
     };
     
     stakes.push(stake);
-    localStorage.setItem('pocketchain_stakes', JSON.stringify(stakes));
+    setUserData('stakes', stakes);
     
     recordTransaction('Stake', -amount, 'Locked');
     
@@ -1014,12 +919,15 @@ function stakePro() {
     if (errorEl) errorEl.classList.remove('show');
     
     updateActivePositions();
+    updateTotalBalance();
     showToast('Success', `Staked ${amount} PCH at ${selectedAPY}% APY`);
 }
 
 function updateActivePositions() {
     const container = document.getElementById('activePositions');
-    if (!container) return;
+    if (!container || !currentUser) return;
+    
+    const stakes = getUserData('stakes');
     
     if (stakes.length === 0) {
         container.innerHTML = `
@@ -1064,6 +972,7 @@ function updateActivePositions() {
 }
 
 function claimStake(stakeId) {
+    const stakes = getUserData('stakes');
     const idx = stakes.findIndex(s => s.id === stakeId);
     if (idx === -1) return;
     
@@ -1071,26 +980,27 @@ function claimStake(stakeId) {
     if (stake.claimed) return;
     
     const totalReturn = stake.amount + stake.earnings;
-    walletBalance += totalReturn;
-    updateWalletDisplays();
+    const balance = getUserData(`${currentChain}_balance`);
+    setUserData(`${currentChain}_balance`, balance + totalReturn);
     
     stakes[idx].claimed = true;
-    localStorage.setItem('pocketchain_stakes', JSON.stringify(stakes));
+    setUserData('stakes', stakes);
     
     recordTransaction('Claim', totalReturn, 'Completed');
     
     updateActivePositions();
-    updateAssetPage();
+    updateTotalBalance();
     showToast('Claimed!', `Received ${totalReturn.toFixed(2)} PCH`);
 }
 
-// --- AIRDROP ---
+// --- AIRDROP & LEADERBOARD ---
 function updateAirdropPage() {
-    const total = completedTasks.length * 10;
+    const tasks = getUserData('tasks');
+    const total = tasks.length * 10;
     const airdropTotal = document.getElementById('airdropTotal');
     if (airdropTotal) airdropTotal.textContent = total + ' PCH';
     
-    completedTasks.forEach(task => {
+    tasks.forEach(task => {
         const btn = document.getElementById('task-' + task);
         if (btn) {
             btn.textContent = 'Claimed';
@@ -1100,6 +1010,58 @@ function updateAirdropPage() {
     
     updateAttendanceUI();
     updateReferralUI();
+    loadLeaderboard('earners');
+}
+
+function switchLeaderboard(type) {
+    document.querySelectorAll('.leaderboard-tab').forEach(tab => tab.classList.remove('active'));
+    event.target.classList.add('active');
+    loadLeaderboard(type);
+}
+
+function loadLeaderboard(type) {
+    const list = document.getElementById('leaderboardList');
+    if (!list) return;
+    
+    let data = [
+        { name: 'Alex M.', email: 'alex@email.com', amount: type === 'earners' ? 1250 : 45 },
+        { name: 'Sarah K.', email: 'sarah@email.com', amount: type === 'earners' ? 980 : 38 },
+        { name: 'Mike R.', email: 'mike@email.com', amount: type === 'earners' ? 875 : 32 },
+        { name: 'Emma L.', email: 'emma@email.com', amount: type === 'earners' ? 720 : 28 },
+        { name: 'John D.', email: 'john@email.com', amount: type === 'earners' ? 650 : 22 }
+    ];
+    
+    if (currentUser) {
+        const userEntry = data.find(d => d.email === currentUser.email);
+        if (!userEntry) {
+            const tasks = getUserData('tasks');
+            const referrals = getUserData('referrals');
+            data.push({
+                name: `${currentUser.firstName} ${currentUser.lastName}`,
+                email: currentUser.email,
+                amount: type === 'earners' ? (tasks.length * 10) : (referrals.invited?.length || 0)
+            });
+        }
+    }
+    
+    data.sort((a, b) => b.amount - a.amount);
+    
+    list.innerHTML = data.map((entry, index) => {
+        const rankClass = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : 'normal';
+        const isCurrentUser = currentUser && entry.email === currentUser.email;
+        
+        return `
+            <div class="leaderboard-item ${isCurrentUser ? 'current-user' : ''}">
+                <div class="leaderboard-rank ${rankClass}">${index + 1}</div>
+                <div class="leaderboard-avatar">${entry.name.charAt(0)}</div>
+                <div class="leaderboard-info">
+                    <div class="leaderboard-name">${entry.name} ${isCurrentUser ? '(You)' : ''}</div>
+                    <div class="leaderboard-email">${entry.email}</div>
+                </div>
+                <div class="leaderboard-amount">${entry.amount} ${type === 'earners' ? 'PCH' : 'refs'}</div>
+            </div>
+        `;
+    }).join('');
 }
 
 function completeTask(task) {
@@ -1108,7 +1070,8 @@ function completeTask(task) {
         return;
     }
     
-    if (completedTasks.includes(task)) return;
+    const tasks = getUserData('tasks');
+    if (tasks.includes(task)) return;
     
     const urls = {
         'discord': 'https://discord.com',
@@ -1125,15 +1088,16 @@ function completeTask(task) {
     }
     
     setTimeout(() => {
-        completedTasks.push(task);
-        localStorage.setItem('pocketchain_tasks', JSON.stringify(completedTasks));
+        tasks.push(task);
+        setUserData('tasks', tasks);
         
-        walletBalance += 10;
-        updateWalletDisplays();
+        const balance = getUserData(`${currentChain}_balance`);
+        setUserData(`${currentChain}_balance`, balance + 10);
         
         recordTransaction('Airdrop', 10, 'Completed');
         
         updateAirdropPage();
+        loadChainData();
         showToast('Reward Claimed!', '+10 PCH added to your balance');
     }, 2000);
 }
@@ -1142,25 +1106,103 @@ function completeTask(task) {
 function updateAccountInfo() {
     if (!currentUser) return;
     
-    const accountFullName = document.getElementById('accountFullName');
-    const accountEmail = document.getElementById('accountEmail');
-    const accountUsername = document.getElementById('accountUsername');
-    const accountAge = document.getElementById('accountAge');
-    const accountJoined = document.getElementById('accountJoined');
-    const accountWallet = document.getElementById('accountWallet');
-    
-    if (accountFullName) accountFullName.textContent = `${currentUser.firstName} ${currentUser.lastName}`;
-    if (accountEmail) accountEmail.textContent = currentUser.email;
-    if (accountUsername) accountUsername.textContent = currentUser.username || currentUser.email.split('@')[0];
-    if (accountAge) accountAge.textContent = currentUser.age;
-    if (accountJoined) accountJoined.textContent = new Date(currentUser.createdAt).toLocaleDateString();
-    if (accountWallet) accountWallet.textContent = walletConnected ? 
+    document.getElementById('accountFullName').textContent = `${currentUser.firstName} ${currentUser.lastName}`;
+    document.getElementById('accountEmail').textContent = currentUser.email;
+    document.getElementById('accountUsername').textContent = currentUser.username || currentUser.email.split('@')[0];
+    document.getElementById('accountAge').textContent = currentUser.age;
+    document.getElementById('accountJoined').textContent = new Date(currentUser.createdAt).toLocaleDateString();
+    document.getElementById('accountWallet').textContent = walletConnected ? 
         walletAddress.substring(0, 10) + '...' + walletAddress.substring(34) : 'Not connected';
-    
-    // Update KYC status if system exists
-    if (typeof kycSystem !== 'undefined' && kycSystem) {
-        kycSystem.updateKYCStatus();
+}
+
+// --- AUTHENTICATION ---
+function checkAuthState() {
+    const savedUser = localStorage.getItem('pocketchain_currentUser');
+    if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+        initUserData();
+        showPrivateUI();
+    } else {
+        showPublicUI();
     }
+}
+
+function showPrivateUI() {
+    document.getElementById('publicMenu').classList.add('hidden');
+    document.getElementById('loginMenu').classList.add('hidden');
+    document.getElementById('privateMenu').classList.remove('hidden');
+    document.getElementById('accountMenu').classList.remove('hidden');
+    
+    updateAccountInfo();
+    updateAttendanceUI();
+    updateReferralUI();
+    initAttendanceSystem();
+    
+    showPage('asset');
+}
+
+function showPublicUI() {
+    document.getElementById('publicMenu').classList.remove('hidden');
+    document.getElementById('loginMenu').classList.remove('hidden');
+    document.getElementById('privateMenu').classList.add('hidden');
+    document.getElementById('accountMenu').classList.add('hidden');
+    
+    showPage('home');
+}
+
+// --- MENU & NAVIGATION ---
+function toggleMenu() {
+    const menu = document.getElementById('sideMenu');
+    const overlay = document.getElementById('overlay');
+    
+    if (!menu) return;
+    
+    const isOpen = menu.classList.contains('open');
+    
+    if (isOpen) {
+        menu.classList.remove('open');
+        if (overlay) overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    } else {
+        menu.classList.add('open');
+        if (overlay) overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('#sideMenu a').forEach(a => a.classList.remove('active'));
+    
+    const page = document.getElementById(pageId);
+    if (page) page.classList.add('active');
+    
+    const navMap = {
+        'home': 'nav-home',
+        'tokenomics': 'nav-tokenomics',
+        'asset': 'nav-asset',
+        'staking': 'nav-staking',
+        'market': 'nav-market',
+        'airdrop': 'nav-airdrop',
+        'account': 'nav-account'
+    };
+    
+    if (navMap[pageId]) {
+        const navEl = document.getElementById(navMap[pageId]);
+        if (navEl) navEl.classList.add('active');
+    }
+    
+    const menu = document.getElementById('sideMenu');
+    if (menu && menu.classList.contains('open')) toggleMenu();
+    
+    if (pageId === 'asset') loadChainData();
+    if (pageId === 'staking') updateStakingPage();
+    if (pageId === 'market') initPriceChart();
+    if (pageId === 'airdrop') updateAirdropPage();
+    if (pageId === 'account') updateAccountInfo();
+    if (pageId === 'tokenomics') initTokenomicsChart();
+    
+    window.scrollTo(0, 0);
 }
 
 // --- AUTH MODALS ---
@@ -1176,15 +1218,10 @@ function closeAuthModal() {
     const modal = document.getElementById('authModal');
     if (modal) modal.classList.remove('active');
     
-    const loginError = document.getElementById('loginError');
-    const signupError = document.getElementById('signupError');
-    if (loginError) loginError.classList.remove('show');
-    if (signupError) signupError.classList.remove('show');
-    
-    const loginEmail = document.getElementById('loginEmail');
-    const loginPassword = document.getElementById('loginPassword');
-    if (loginEmail) loginEmail.value = '';
-    if (loginPassword) loginPassword.value = '';
+    document.getElementById('loginError').classList.remove('show');
+    document.getElementById('signupError').classList.remove('show');
+    document.getElementById('loginEmail').value = '';
+    document.getElementById('loginPassword').value = '';
 }
 
 function switchAuth(type) {
@@ -1221,24 +1258,16 @@ function togglePassword(inputId, btn) {
 }
 
 function handleLogin() {
-    const emailInput = document.getElementById('loginEmail');
-    const passwordInput = document.getElementById('loginPassword');
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
     const errorDiv = document.getElementById('loginError');
     
-    if (!emailInput || !passwordInput) return;
-    
-    const email = emailInput.value.trim();
-    const password = passwordInput.value;
-    
     if (!email || !password) {
-        if (errorDiv) {
-            errorDiv.textContent = 'Please fill in all fields';
-            errorDiv.classList.add('show');
-        }
+        errorDiv.textContent = 'Please fill in all fields';
+        errorDiv.classList.add('show');
         return;
     }
     
-    // Check admin credentials
     if (email === ADMIN_CREDENTIALS.user && password === ADMIN_CREDENTIALS.pass) {
         const adminUser = {
             id: 999999,
@@ -1253,97 +1282,75 @@ function handleLogin() {
         
         currentUser = adminUser;
         localStorage.setItem('pocketchain_currentUser', JSON.stringify(adminUser));
+        initUserData();
         closeAuthModal();
         showPrivateUI();
         showToast('Welcome Back', 'Hello, Master Ghed! (Admin)');
         return;
     }
     
-    // Check regular users - STRICT COMPARISON
+    const users = JSON.parse(localStorage.getItem('pocketchain_users') || '[]');
     const user = users.find(u => (u.email === email || u.username === email) && u.password === password);
     
     if (!user) {
-        if (errorDiv) {
-            errorDiv.textContent = 'Invalid email/username or password';
-            errorDiv.classList.add('show');
-        }
+        errorDiv.textContent = 'Invalid email/username or password';
+        errorDiv.classList.add('show');
         return;
     }
     
-    // Ensure user data is isolated
     currentUser = user;
     localStorage.setItem('pocketchain_currentUser', JSON.stringify(user));
+    initUserData();
     closeAuthModal();
     showPrivateUI();
     showToast('Welcome Back', `Hello, ${user.firstName}!`);
 }
 
 function handleSignup() {
-    const regFirstName = document.getElementById('regFirstName');
-    const regLastName = document.getElementById('regLastName');
-    const regEmail = document.getElementById('regEmail');
-    const regAge = document.getElementById('regAge');
-    const regPassword = document.getElementById('regPassword');
-    const regConfirmPassword = document.getElementById('regConfirmPassword');
+    const firstName = document.getElementById('regFirstName').value.trim();
+    const lastName = document.getElementById('regLastName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const age = parseInt(document.getElementById('regAge').value);
+    const password = document.getElementById('regPassword').value;
+    const confirmPassword = document.getElementById('regConfirmPassword').value;
     const errorDiv = document.getElementById('signupError');
     
-    if (!regFirstName || !regLastName || !regEmail || !regAge || !regPassword || !regConfirmPassword) return;
-    
-    const firstName = regFirstName.value.trim();
-    const lastName = regLastName.value.trim();
-    const email = regEmail.value.trim();
-    const age = parseInt(regAge.value);
-    const password = regPassword.value;
-    const confirmPassword = regConfirmPassword.value;
-    
     if (!firstName || !lastName || !email || !age || !password || !confirmPassword) {
-        if (errorDiv) {
-            errorDiv.textContent = 'Please fill in all fields';
-            errorDiv.classList.add('show');
-        }
+        errorDiv.textContent = 'Please fill in all fields';
+        errorDiv.classList.add('show');
         return;
     }
     
     if (age < 18) {
-        if (errorDiv) {
-            errorDiv.textContent = 'You must be 18 or older';
-            errorDiv.classList.add('show');
-        }
+        errorDiv.textContent = 'You must be 18 or older';
+        errorDiv.classList.add('show');
         return;
     }
     
     if (password.length < 8) {
-        if (errorDiv) {
-            errorDiv.textContent = 'Password must be at least 8 characters';
-            errorDiv.classList.add('show');
-        }
+        errorDiv.textContent = 'Password must be at least 8 characters';
+        errorDiv.classList.add('show');
         return;
     }
     
     if (password !== confirmPassword) {
-        if (errorDiv) {
-            errorDiv.textContent = 'Passwords do not match';
-            errorDiv.classList.add('show');
-        }
+        errorDiv.textContent = 'Passwords do not match';
+        errorDiv.classList.add('show');
         return;
     }
     
-    // Check if email exists
+    const users = JSON.parse(localStorage.getItem('pocketchain_users') || '[]');
+    
     if (users.find(u => u.email === email)) {
-        if (errorDiv) {
-            errorDiv.textContent = 'Email already registered';
-            errorDiv.classList.add('show');
-        }
+        errorDiv.textContent = 'Email already registered';
+        errorDiv.classList.add('show');
         return;
     }
     
-    // Check if username exists
     const username = email.split('@')[0];
     if (users.find(u => u.username === username)) {
-        if (errorDiv) {
-            errorDiv.textContent = 'Username already taken';
-            errorDiv.classList.add('show');
-        }
+        errorDiv.textContent = 'Username already taken';
+        errorDiv.classList.add('show');
         return;
     }
     
@@ -1364,27 +1371,27 @@ function handleSignup() {
     
     currentUser = newUser;
     localStorage.setItem('pocketchain_currentUser', JSON.stringify(newUser));
+    initUserData();
     closeAuthModal();
     showPrivateUI();
     showToast('Welcome!', 'Account created successfully');
 }
 
 function logout() {
+    if (walletConnected) {
+        disconnectWallet(true);
+    }
+    
     currentUser = null;
     localStorage.removeItem('pocketchain_currentUser');
     showPublicUI();
-    showToast('Logged Out', 'See you soon!');
+    showToast('Logged Out', 'Wallet disconnected and session ended');
 }
 
 // --- SUPPORT ---
 function submitSupport() {
-    const supportSubject = document.getElementById('supportSubject');
-    const supportMessage = document.getElementById('supportMessage');
-    
-    if (!supportSubject || !supportMessage) return;
-    
-    const subject = supportSubject.value.trim();
-    const message = supportMessage.value.trim();
+    const subject = document.getElementById('supportSubject').value.trim();
+    const message = document.getElementById('supportMessage').value.trim();
     
     if (!subject || !message) {
         showToast('Error', 'Please fill in all fields', 'error');
@@ -1392,8 +1399,8 @@ function submitSupport() {
     }
     
     showToast('Ticket Submitted', "We'll respond within 24 hours");
-    supportSubject.value = '';
-    supportMessage.value = '';
+    document.getElementById('supportSubject').value = '';
+    document.getElementById('supportMessage').value = '';
 }
 
 function openBugModal() {
@@ -1407,12 +1414,7 @@ function closeBugModal() {
 }
 
 function submitBug() {
-    const bugType = document.getElementById('bugType');
-    const bugDesc = document.getElementById('bugDesc');
-    
-    if (!bugDesc) return;
-    
-    const desc = bugDesc.value.trim();
+    const desc = document.getElementById('bugDesc').value.trim();
     
     if (!desc) {
         showToast('Error', 'Please describe the issue', 'error');
@@ -1421,7 +1423,7 @@ function submitBug() {
     
     showToast('Bug Reported', 'Thank you for your feedback');
     closeBugModal();
-    bugDesc.value = '';
+    document.getElementById('bugDesc').value = '';
 }
 
 // --- CHARTS ---
@@ -1438,9 +1440,7 @@ function initTokenomicsChart() {
     const ctx = document.getElementById('tokenomicsChart');
     if (!ctx) return;
     
-    if (tokenomicsChartInstance) {
-        tokenomicsChartInstance.destroy();
-    }
+    if (tokenomicsChartInstance) tokenomicsChartInstance.destroy();
     
     tokenomicsChartInstance = new Chart(ctx, {
         type: 'doughnut',
@@ -1448,14 +1448,7 @@ function initTokenomicsChart() {
             labels: ['Staking Rewards', 'Liquidity', 'Team', 'Development', 'Community/Airdrop', 'Reserve'],
             datasets: [{
                 data: [40, 20, 15, 10, 10, 5],
-                backgroundColor: [
-                    '#00c2ff',
-                    '#00ff88',
-                    '#7000ff',
-                    '#ffa502',
-                    '#ff4757',
-                    '#747d8c'
-                ],
+                backgroundColor: ['#00c2ff', '#00ff88', '#7000ff', '#ffa502', '#ff4757', '#747d8c'],
                 borderWidth: 0,
                 hoverOffset: 4
             }]
@@ -1466,19 +1459,7 @@ function initTokenomicsChart() {
             plugins: {
                 legend: {
                     position: 'right',
-                    labels: { 
-                        color: '#8b9bb4', 
-                        font: { size: 11 },
-                        padding: 15,
-                        boxWidth: 12
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return context.label + ': ' + context.parsed + '%';
-                        }
-                    }
+                    labels: { color: '#8b9bb4', font: { size: 11 }, padding: 15, boxWidth: 12 }
                 }
             },
             cutout: '65%'
@@ -1490,9 +1471,7 @@ function initPriceChart() {
     const ctx = document.getElementById('priceChart');
     if (!ctx) return;
     
-    if (priceChartInstance) {
-        priceChartInstance.destroy();
-    }
+    if (priceChartInstance) priceChartInstance.destroy();
     
     const hours = 24;
     const labels = Array(hours).fill(0).map((_, i) => {
@@ -1502,9 +1481,7 @@ function initPriceChart() {
     });
     
     const basePrice = 0.045;
-    const prices = Array(hours).fill(0).map(() => {
-        return basePrice + (Math.random() - 0.5) * 0.01;
-    });
+    const prices = Array(hours).fill(0).map(() => basePrice + (Math.random() - 0.5) * 0.01);
     
     priceChartInstance = new Chart(ctx, {
         type: 'line',
@@ -1525,40 +1502,16 @@ function initPriceChart() {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                    callbacks: {
-                        label: function(context) {
-                            return 'PCH: $' + context.parsed.y.toFixed(4);
-                        }
-                    }
-                }
-            },
+            plugins: { legend: { display: false } },
             scales: {
                 y: {
                     grid: { color: 'rgba(255,255,255,0.05)' },
-                    ticks: { 
-                        color: '#8b9bb4',
-                        callback: function(value) {
-                            return '$' + value.toFixed(3);
-                        }
-                    }
+                    ticks: { color: '#8b9bb4', callback: function(value) { return '$' + value.toFixed(3); } }
                 },
                 x: {
                     grid: { display: false },
-                    ticks: { 
-                        color: '#8b9bb4',
-                        maxTicksLimit: 8
-                    }
+                    ticks: { color: '#8b9bb4', maxTicksLimit: 8 }
                 }
-            },
-            interaction: {
-                mode: 'nearest',
-                axis: 'x',
-                intersect: false
             }
         }
     });
@@ -1589,23 +1542,54 @@ function startPriceUpdates() {
         
         const capEl = document.getElementById('magMarketCap');
         if (capEl) capEl.textContent = '$' + marketCap + 'B';
-        
     }, 5000);
 }
 
 // --- UTILITIES ---
 function recordTransaction(type, amount, status) {
+    const transactions = getUserData('transactions');
     transactions.unshift({
         type: type,
         amount: amount,
         date: new Date().toISOString(),
         status: status
     });
-    localStorage.setItem('pocketchain_transactions', JSON.stringify(transactions));
+    setUserData('transactions', transactions);
+    updateTransactionHistory();
+}
+
+function updateTransactionHistory() {
+    const container = document.getElementById('transactionHistory');
+    if (!container || !currentUser) return;
+    
+    const transactions = getUserData('transactions');
+    
+    if (transactions.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-exchange-alt"></i>
+                <p>No transactions yet</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = transactions.slice(0, 10).map(tx => `
+        <div class="tx-row">
+            <div class="tx-info">
+                <div class="tx-type">${tx.type}</div>
+                <div class="tx-date">${new Date(tx.date).toLocaleDateString()}</div>
+            </div>
+            <div class="tx-amount-section">
+                <div class="tx-amount ${tx.amount > 0 ? 'positive' : 'negative'}">${tx.amount > 0 ? '+' : ''}${tx.amount} PCH</div>
+                <div class="tx-status">${tx.status}</div>
+            </div>
+        </div>
+    `).join('');
 }
 
 function updateAllStats() {
-    updateWalletDisplays();
+    if (currentUser) loadChainData();
 }
 
 function showToast(title, message, type = 'success') {
@@ -1629,5 +1613,34 @@ function showToast(title, message, type = 'success') {
     }, 3000);
 }
 
+function setupEventListeners() {
+    const stakeInput = document.getElementById('stakeAmountPro');
+    if (stakeInput) stakeInput.addEventListener('input', calculateProEarnings);
+    
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('modal') && event.target.classList.contains('active')) {
+            if (event.target === event.target.closest('.modal')) {
+                closeAllModals();
+            }
+        }
+    });
+    
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeAllModals();
+            const menu = document.getElementById('sideMenu');
+            const overlay = document.getElementById('overlay');
+            if (menu && menu.classList.contains('open')) {
+                menu.classList.remove('open');
+                if (overlay) overlay.classList.remove('active');
+            }
+        }
+    });
+}
+
+function closeAllModals() {
+    document.querySelectorAll('.modal').forEach(modal => modal.classList.remove('active'));
+}
+
 console.log('🔷 PocketChain (PCH) Platform Loaded');
-console.log('✨ Professional DeFi Platform with KYC, Referral & Attendance System');
+console.log('✨ Professional DeFi Platform with All Features');
