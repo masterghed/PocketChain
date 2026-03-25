@@ -1,1287 +1,334 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PocketChain | Professional DeFi Staking</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+// ==========================================
+// POCKETCHAIN KYC SYSTEM - COMPLETE
+// With Working Camera Functionality
+// ==========================================
 
-    <!-- Header -->
-    <header>
-        <div class="header-spacer"></div>
-        <div class="logo">
-            <i class="fas fa-link"></i>
-            <span>POCKETCHAIN</span>
-        </div>
-        <div class="header-actions">
-            <button class="wallet-btn" id="walletBtn" onclick="openWalletModal()">
-                <i class="fas fa-wallet"></i>
-                <span>Connect Wallet</span>
-            </button>
-        </div>
-    </header>
+class KYCSystem {
+    constructor() {
+        this.kycData = JSON.parse(localStorage.getItem('pocketchain_kyc') || '{}');
+        this.kycQueue = JSON.parse(localStorage.getItem('pocketchain_kyc_queue') || '[]');
+        this.stream = null;
+        this.capturedImage = null;
+        this.init();
+    }
 
-    <!-- Menu Toggle -->
-    <button class="menu-toggle" onclick="toggleMenu()">
-        <i class="fas fa-bars"></i>
-    </button>
+    init() {
+        this.setupEventListeners();
+        this.updateKYCStatus();
+    }
 
-    <!-- Overlay -->
-    <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+    setupEventListeners() {
+        const form = document.getElementById('kycForm');
+        if (form) {
+            form.addEventListener('submit', (e) => this.handleKYCSubmit(e));
+        }
+    }
 
-    <!-- Side Menu -->
-    <div id="sideMenu">
-        <button class="close-menu" onclick="toggleMenu()"><i class="fas fa-times"></i></button>
+    handleKYCSubmit(e) {
+        e.preventDefault();
+
+        if (!currentUser) {
+            showToast('Error', 'Please login first', 'error');
+            return;
+        }
+
+        const formData = {
+            userId: currentUser.id,
+            fullName: document.getElementById('kycFullName')?.value.trim(),
+            birthDate: document.getElementById('kycBirthDate')?.value,
+            nationality: document.getElementById('kycNationality')?.value,
+            idType: document.getElementById('kycIdType')?.value,
+            idNumber: document.getElementById('kycIdNumber')?.value.trim(),
+            address: document.getElementById('kycAddress')?.value.trim(),
+            city: document.getElementById('kycCity')?.value.trim(),
+            country: document.getElementById('kycCountry')?.value,
+            phone: document.getElementById('kycPhone')?.value.trim(),
+            submittedAt: new Date().toISOString(),
+            status: 'pending',
+            id: Date.now()
+        };
+
+        if (!formData.fullName || !formData.birthDate || !formData.nationality || 
+            !formData.idType || !formData.idNumber || !formData.address || 
+            !formData.city || !formData.country || !formData.phone) {
+            showToast('Error', 'Please fill in all required fields', 'error');
+            return;
+        }
+
+        if (this.kycData[currentUser.id] && this.kycData[currentUser.id].status === 'pending') {
+            showToast('Pending', 'Your KYC is already under review', 'error');
+            return;
+        }
+
+        if (this.kycData[currentUser.id] && this.kycData[currentUser.id].status === 'verified') {
+            showToast('Verified', 'Your KYC is already approved', 'error');
+            return;
+        }
+
+        this.kycData[currentUser.id] = formData;
+        localStorage.setItem('pocketchain_kyc', JSON.stringify(this.kycData));
+
+        this.kycQueue.push({
+            kycId: formData.id,
+            userId: currentUser.id,
+            userEmail: currentUser.email,
+            submittedAt: formData.submittedAt,
+            status: 'pending'
+        });
+        localStorage.setItem('pocketchain_kyc_queue', JSON.stringify(this.kycQueue));
+
+        this.updateKYCStatus();
+        showToast('Submitted', 'KYC application submitted for review', 'success');
         
-        <!-- Theme Toggle -->
-        <button class="theme-toggle" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Theme">
-            <i class="fas fa-moon" id="themeIcon"></i>
-        </button>
-        
-        <div class="menu-section">
-            <div class="logo" style="font-size: 1.2rem; margin-bottom: 10px;">
-                <i class="fas fa-link"></i>
-                <span>POCKETCHAIN</span>
-            </div>
-        </div>
+        document.getElementById('kycForm')?.reset();
+        document.getElementById('idPreview')?.classList.remove('has-preview');
+        document.getElementById('selfiePreview')?.classList.remove('has-preview');
+    }
 
-        <!-- Public Menu -->
-        <div class="menu-section" id="publicMenu">
-            <div class="menu-label">Explore</div>
-            <a onclick="showPage('home')" class="active" id="nav-home">
-                <i class="fas fa-home"></i> Home
-            </a>
-            <a onclick="showPage('tokenomics')" id="nav-tokenomics">
-                <i class="fas fa-chart-pie"></i> Tokenomics
-            </a>
-        </div>
+    updateKYCStatus() {
+        if (!currentUser) return;
 
-        <!-- Private Menu -->
-        <div class="menu-section hidden" id="privateMenu">
-            <div class="menu-label">Platform</div>
-            <a onclick="showPage('asset')" id="nav-asset">
-                <i class="fas fa-wallet"></i> Assets
-            </a>
-            <a onclick="showPage('staking')" id="nav-staking">
-                <i class="fas fa-coins"></i> Staking Pro
-            </a>
-            <a onclick="showPage('market')" id="nav-market">
-                <i class="fas fa-chart-line"></i> Live Market
-            </a>
-            <a onclick="showPage('airdrop')" id="nav-airdrop">
-                <i class="fas fa-gift"></i> Airdrop
-            </a>
-        </div>
+        const kycInfo = this.kycData[currentUser.id];
+        const statusBadge = document.getElementById('kycStatusBadge');
+        const statusText = document.getElementById('kycStatusText');
+        const kycForm = document.getElementById('kycForm');
+        const kycSubmitted = document.getElementById('kycSubmittedView');
 
-        <div class="menu-section">
-            <div class="menu-label">Support</div>
-            <a onclick="showPage('support')">
-                <i class="fas fa-headset"></i> Help & Support
-            </a>
-            <a onclick="showPage('terms')">
-                <i class="fas fa-shield-alt"></i> Terms & Policies
-            </a>
-        </div>
-
-        <!-- Account Menu -->
-        <div class="menu-section hidden" id="accountMenu">
-            <div class="menu-label">Account</div>
-            <a onclick="showPage('account')" id="nav-account">
-                <i class="fas fa-user-circle"></i> My Account
-            </a>
-            <a onclick="logout()" style="color: var(--danger);">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </a>
-        </div>
-
-        <!-- Login Menu -->
-        <div class="menu-section" id="loginMenu">
-            <a onclick="openAuthModal('login')" class="menu-login-btn">
-                <i class="fas fa-sign-in-alt"></i> Sign In
-            </a>
-        </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="content-area">
-        
-        <!-- HOME PAGE -->
-        <div id="home" class="page active">
-            <div class="hero">
-                <div class="hero-badge">
-                    <i class="fas fa-rocket"></i>
-                    <span>Next Generation DeFi Protocol</span>
-                </div>
-                
-                <h1>POCKETCHAIN</h1>
-                <p class="hero-ticker">$PCH</p>
-                
-                <p class="hero-subtitle">
-                    Professional Decentralized Staking Protocol. Earn up to 125% APY 
-                    with institutional-grade security on the PocketChain network.
-                </p>
-
-                <div class="hero-stats">
-                    <div class="hero-stat">
-                        <div class="hero-stat-value">$12.5M+</div>
-                        <div class="hero-stat-label">Total Value Locked</div>
+        if (!kycInfo) {
+            if (statusBadge) {
+                statusBadge.className = 'kyc-badge unverified';
+                statusBadge.innerHTML = '<i class="fas fa-times-circle"></i> Not Verified';
+            }
+            if (statusText) statusText.textContent = 'Complete KYC to unlock all features';
+            if (kycForm) kycForm.style.display = 'block';
+            if (kycSubmitted) kycSubmitted.style.display = 'none';
+        } else if (kycInfo.status === 'pending') {
+            if (statusBadge) {
+                statusBadge.className = 'kyc-badge pending';
+                statusBadge.innerHTML = '<i class="fas fa-clock"></i> Under Review';
+            }
+            if (statusText) statusText.textContent = 'Your application is being reviewed';
+            if (kycForm) kycForm.style.display = 'none';
+            if (kycSubmitted) {
+                kycSubmitted.style.display = 'block';
+                kycSubmitted.innerHTML = `
+                    <div class="kyc-pending-msg">
+                        <i class="fas fa-hourglass-half"></i>
+                        <h4>Under Review</h4>
+                        <p>Submitted: ${new Date(kycInfo.submittedAt).toLocaleDateString()}</p>
+                        <p>Estimated review time: 24-48 hours</p>
                     </div>
-                    <div class="hero-stat">
-                        <div class="hero-stat-value">8,420+</div>
-                        <div class="hero-stat-label">Active Stakers</div>
+                `;
+            }
+        } else if (kycInfo.status === 'verified') {
+            if (statusBadge) {
+                statusBadge.className = 'kyc-badge verified';
+                statusBadge.innerHTML = '<i class="fas fa-check-circle"></i> Verified';
+            }
+            if (statusText) statusText.textContent = 'Your identity has been verified';
+            if (kycForm) kycForm.style.display = 'none';
+            if (kycSubmitted) {
+                kycSubmitted.style.display = 'block';
+                kycSubmitted.innerHTML = `
+                    <div class="kyc-verified-msg">
+                        <i class="fas fa-shield-alt"></i>
+                        <h4>KYC Verified</h4>
+                        <p>Verified on: ${new Date(kycInfo.verifiedAt).toLocaleDateString()}</p>
+                        <p>Level: Full Access</p>
                     </div>
-                    <div class="hero-stat">
-                        <div class="hero-stat-value">125%</div>
-                        <div class="hero-stat-label">Max APY</div>
-                    </div>
-                </div>
+                `;
+            }
+        }
+    }
 
-                <div class="hero-actions">
-                    <button class="btn-primary" onclick="openAuthModal('signup')">
-                        <i class="fas fa-rocket"></i> Get Started
-                    </button>
-                    <button class="btn-secondary" onclick="openAuthModal('login')">
-                        <i class="fas fa-sign-in-alt"></i> Sign In
-                    </button>
-                </div>
-            </div>
-
-            <!-- Mission Section -->
-            <div class="mission-section" id="publicMission">
-                <div class="section-header">
-                    <h2>Mission & Vision</h2>
-                    <p>Building the future of decentralized finance</p>
-                </div>
-
-                <div class="mission-grid">
-                    <div class="mission-card">
-                        <div class="mission-icon">
-                            <i class="fas fa-shield-alt"></i>
-                        </div>
-                        <h3>Security First</h3>
-                        <p>Multi-signature wallets, real-time monitoring, and audited smart contracts protect your assets.</p>
-                    </div>
-
-                    <div class="mission-card">
-                        <div class="mission-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <h3>Sustainable Yield</h3>
-                        <p>Generate consistent returns through diversified staking strategies and algorithmic rewards.</p>
-                    </div>
-
-                    <div class="mission-card">
-                        <div class="mission-icon">
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <h3>Community Driven</h3>
-                        <p>PCH token holders govern the protocol ensuring transparent decision-making.</p>
-                    </div>
-
-                    <div class="mission-card">
-                        <div class="mission-icon">
-                            <i class="fas fa-globe"></i>
-                        </div>
-                        <h3>Global Access</h3>
-                        <p>Borderless financial services enabling anyone, anywhere to participate.</p>
-                    </div>
-
-                    <div class="mission-card">
-                        <div class="mission-icon">
-                            <i class="fas fa-bolt"></i>
-                        </div>
-                        <h3>Innovation</h3>
-                        <p>Continuous R&D integrating cutting-edge DeFi solutions and cross-chain capabilities.</p>
-                    </div>
-
-                    <div class="mission-card">
-                        <div class="mission-icon">
-                            <i class="fas fa-hand-holding-heart"></i>
-                        </div>
-                        <h3>Transparency</h3>
-                        <p>Real-time on-chain verification of all transactions and protocol metrics.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- TOKENOMICS PAGE -->
-        <div id="tokenomics" class="page">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title"><i class="fas fa-chart-pie"></i> Tokenomics</h2>
-                </div>
-
-                <div class="token-info-banner">
-                    <div class="token-info-item">
-                        <span class="token-info-label">Token Name</span>
-                        <span class="token-info-value">PocketChain</span>
-                    </div>
-                    <div class="token-info-item">
-                        <span class="token-info-label">Ticker</span>
-                        <span class="token-info-value">$PCH</span>
-                    </div>
-                    <div class="token-info-item">
-                        <span class="token-info-label">Total Supply</span>
-                        <span class="token-info-value">1,000,000,000 PCH</span>
-                    </div>
-                </div>
-
-                <div class="tokenomics-grid">
-                    <div class="tokenomics-card">
-                        <div class="tokenomics-icon"><i class="fas fa-coins"></i></div>
-                        <div class="tokenomics-value">40%</div>
-                        <div class="tokenomics-label">Staking Rewards</div>
-                        <div class="tokenomics-amount">400M PCH</div>
-                    </div>
-                    <div class="tokenomics-card">
-                        <div class="tokenomics-icon"><i class="fas fa-water"></i></div>
-                        <div class="tokenomics-value">20%</div>
-                        <div class="tokenomics-label">Liquidity</div>
-                        <div class="tokenomics-amount">200M PCH</div>
-                    </div>
-                    <div class="tokenomics-card">
-                        <div class="tokenomics-icon"><i class="fas fa-users-cog"></i></div>
-                        <div class="tokenomics-value">15%</div>
-                        <div class="tokenomics-label">Team</div>
-                        <div class="tokenomics-amount">150M PCH</div>
-                    </div>
-                    <div class="tokenomics-card">
-                        <div class="tokenomics-icon"><i class="fas fa-code"></i></div>
-                        <div class="tokenomics-value">10%</div>
-                        <div class="tokenomics-label">Development</div>
-                        <div class="tokenomics-amount">100M PCH</div>
-                    </div>
-                    <div class="tokenomics-card">
-                        <div class="tokenomics-icon"><i class="fas fa-parachute-box"></i></div>
-                        <div class="tokenomics-value">10%</div>
-                        <div class="tokenomics-label">Community / Airdrop</div>
-                        <div class="tokenomics-amount">100M PCH</div>
-                    </div>
-                    <div class="tokenomics-card">
-                        <div class="tokenomics-icon"><i class="fas fa-vault"></i></div>
-                        <div class="tokenomics-value">5%</div>
-                        <div class="tokenomics-label">Reserve</div>
-                        <div class="tokenomics-amount">50M PCH</div>
-                    </div>
-                </div>
-
-                <div class="chart-container">
-                    <canvas id="tokenomicsChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- ASSET PAGE - WITH ONCHAIN/OFFCHAIN -->
-        <div id="asset" class="page">
-            <div class="dashboard-header">
-                <div class="welcome-text">
-                    <h1>My Assets</h1>
-                    <p>Manage your PCH portfolio</p>
-                </div>
-            </div>
-
-            <!-- Chain Toggle -->
-            <div class="chain-toggle-container">
-                <button class="chain-toggle-btn active" id="onchainBtn" onclick="switchChain('onchain')">
-                    <i class="fas fa-link"></i> Onchain
-                </button>
-                <button class="chain-toggle-btn" id="offchainBtn" onclick="switchChain('offchain')">
-                    <i class="fas fa-server"></i> Offchain
-                </button>
-            </div>
-
-            <div class="asset-overview">
-                <div class="asset-card">
-                    <div class="asset-label">Total Balance</div>
-                    <div class="asset-value" id="totalBalance">0.00 PCH</div>
-                    <div class="asset-sub">≈ $0.00 USD</div>
-                </div>
-                <div class="asset-card">
-                    <div class="asset-label">Available</div>
-                    <div class="asset-value" id="availableBalance">0.00 PCH</div>
-                    <div class="asset-sub">Ready to use</div>
-                </div>
-                <div class="asset-card">
-                    <div class="asset-label">Staked</div>
-                    <div class="asset-value" id="stakedBalance">0.00 PCH</div>
-                    <div class="asset-sub">Earning rewards</div>
-                </div>
-                <div class="asset-card">
-                    <div class="asset-label">Rewards</div>
-                    <div class="asset-value" id="rewardsBalance">0.00 PCH</div>
-                    <div class="asset-sub">Claimable</div>
-                </div>
-            </div>
-
-            <div class="action-buttons">
-                <button class="action-btn" onclick="openSendModal()">
-                    <i class="fas fa-paper-plane"></i>
-                    <span>Send</span>
-                </button>
-                <button class="action-btn" onclick="openReceiveModal()">
-                    <i class="fas fa-qrcode"></i>
-                    <span>Receive</span>
-                </button>
-                <button class="action-btn" onclick="openConvertModal()">
-                    <i class="fas fa-exchange-alt"></i>
-                    <span>Convert</span>
-                </button>
-                <button class="action-btn" onclick="openWithdrawModal()">
-                    <i class="fas fa-university"></i>
-                    <span>Withdraw</span>
-                </button>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-history"></i> Recent Transactions</h3>
-                </div>
-                <div id="transactionHistory">
-                    <div class="empty-state">
-                        <i class="fas fa-exchange-alt"></i>
-                        <p>No transactions yet</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- STAKING PRO PAGE -->
-        <div id="staking" class="page">
-            <div class="dashboard-header">
-                <div class="welcome-text">
-                    <h1>Staking Pro</h1>
-                    <p>Professional staking with institutional-grade yields</p>
-                </div>
-            </div>
-
-            <div class="staking-pro">
-                <div class="staking-pools-container">
-                    <h3 class="section-subtitle">Select Pool</h3>
-                    
-                    <div class="staking-pool" onclick="selectPool(this, 7, 15)" data-pool="7">
-                        <div class="pool-header">
-                            <span class="pool-name">⚡ Flexi Pool</span>
-                            <span class="pool-apy">15% APY</span>
-                        </div>
-                        <div class="pool-details">
-                            <div class="pool-detail"><i class="fas fa-clock"></i> 7 Days</div>
-                            <div class="pool-detail"><i class="fas fa-coins"></i> Min: 100 PCH</div>
-                            <div class="pool-detail"><i class="fas fa-unlock"></i> No lock</div>
-                        </div>
-                    </div>
-
-                    <div class="staking-pool" onclick="selectPool(this, 180, 45)" data-pool="180">
-                        <div class="pool-header">
-                            <span class="pool-name">🎯 Growth Pool</span>
-                            <span class="pool-apy">45% APY</span>
-                        </div>
-                        <div class="pool-details">
-                            <div class="pool-detail"><i class="fas fa-clock"></i> 6 Months</div>
-                            <div class="pool-detail"><i class="fas fa-coins"></i> Min: 1,000 PCH</div>
-                            <div class="pool-detail"><i class="fas fa-lock"></i> Locked</div>
-                        </div>
-                    </div>
-
-                    <div class="staking-pool" onclick="selectPool(this, 365, 85)" data-pool="365">
-                        <div class="pool-header">
-                            <span class="pool-name">🏆 Pro Pool</span>
-                            <span class="pool-apy">85% APY</span>
-                        </div>
-                        <div class="pool-details">
-                            <div class="pool-detail"><i class="fas fa-clock"></i> 1 Year</div>
-                            <div class="pool-detail"><i class="fas fa-coins"></i> Min: 5,000 PCH</div>
-                            <div class="pool-detail"><i class="fas fa-lock"></i> Locked</div>
-                        </div>
-                    </div>
-
-                    <div class="staking-pool" onclick="selectPool(this, 1825, 125)" data-pool="1825">
-                        <div class="pool-header">
-                            <span class="pool-name">💎 Diamond Hands</span>
-                            <span class="pool-apy">125% APY</span>
-                        </div>
-                        <div class="pool-details">
-                            <div class="pool-detail"><i class="fas fa-clock"></i> 5 Years</div>
-                            <div class="pool-detail"><i class="fas fa-coins"></i> Min: 10,000 PCH</div>
-                            <div class="pool-detail"><i class="fas fa-crown"></i> VIP</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="staking-controls">
-                    <div class="card">
-                        <h3 class="section-subtitle">Stake Amount</h3>
-                        
-                        <div class="form-group">
-                            <label>Amount (PCH)</label>
-                            <div class="input-wrapper">
-                                <input type="number" id="stakeAmountPro" class="form-input" placeholder="0.00">
-                                <button onclick="setMaxStake()" class="max-btn">MAX</button>
-                            </div>
-                            <div class="input-meta">
-                                <span class="balance-display">Balance: <span id="stakeBalanceDisplay">0.00</span> PCH</span>
-                                <span class="error-msg" id="stakeError">Insufficient balance</span>
-                            </div>
-                        </div>
-
-                        <div class="earn-preview" id="earnPreviewPro">
-                            <h4><i class="fas fa-calculator"></i> Projected Returns</h4>
-                            <div class="earn-grid">
-                                <div class="earn-item">
-                                    <div class="earn-label">Total Return</div>
-                                    <div class="earn-value" id="totalReturnPro">0.00 PCH</div>
-                                </div>
-                                <div class="earn-item">
-                                    <div class="earn-label">Daily Earnings</div>
-                                    <div class="earn-value daily" id="dailyEarningsPro">0.00 PCH</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <button class="btn-primary" id="stakeBtnPro" onclick="stakePro()" disabled>
-                            Select a Pool to Stake
-                        </button>
-                    </div>
-
-                    <div class="card">
-                        <h3 class="section-subtitle">Active Positions</h3>
-                        <div id="activePositions">
-                            <div class="empty-state">
-                                <i class="fas fa-coins"></i>
-                                <p>No active stakes</p>
-                                <p class="empty-sub">Select a pool and start earning</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- MARKET PAGE -->
-        <div id="market" class="page">
-            <div class="dashboard-header">
-                <div class="welcome-text">
-                    <h1>Live Market</h1>
-                    <p>Real-time PCH token metrics</p>
-                </div>
-                <div class="live-price-bar">
-                    <div class="price-item">
-                        <span class="price-label">PCH/USD</span>
-                        <span class="price-value" id="magPrice">$0.0452</span>
-                        <span class="price-change">+5.23%</span>
-                    </div>
-                    <div class="price-item">
-                        <span class="price-label">24h Volume</span>
-                        <span class="price-value" id="magVolume">$2.4M</span>
-                    </div>
-                    <div class="price-item">
-                        <span class="price-label">Market Cap</span>
-                        <span class="price-value" id="magMarketCap">$4.52B</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="chart-container market-chart">
-                <canvas id="priceChart"></canvas>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <div class="stat-label">Circulating Supply</div>
-                    <div class="stat-value">950M PCH</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">Burned</div>
-                    <div class="stat-value">50M PCH</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">Holders</div>
-                    <div class="stat-value">125K+</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">Staked %</div>
-                    <div class="stat-value">68%</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- AIRDROP PAGE - UNIFIED FRAME -->
-        <div id="airdrop" class="page">
-            <div class="dashboard-header">
-                <div class="welcome-text">
-                    <h1><i class="fas fa-gift" style="color: var(--secondary);"></i> Airdrop Campaign</h1>
-                    <p>Complete tasks and earn free PCH tokens</p>
-                </div>
-            </div>
-
-            <!-- Unified Glass Frame -->
-            <div class="unified-airdrop-frame">
-                <!-- Daily Attendance -->
-                <div class="attendance-section">
-                    <div class="attendance-header">
-                        <i class="fas fa-calendar-check"></i>
-                        <h3>Daily Attendance</h3>
-                        <p>Claim daily rewards and build your streak!</p>
-                    </div>
-                    
-                    <div class="attendance-streak">
-                        <span class="streak-number" id="attendanceStreak">0</span>
-                        <span class="streak-label">day streak</span>
-                    </div>
-                    
-                    <button class="daily-claim-btn" id="dailyClaimBtn" onclick="claimDailyReward()">
-                        Claim Daily Reward
-                    </button>
-                    
-                    <div class="attendance-info">
-                        <div class="attendance-info-item">
-                            <div class="attendance-info-value" id="totalClaims">0</div>
-                            <div class="attendance-info-label">Total Claims</div>
-                        </div>
-                        <div class="attendance-info-item">
-                            <div class="attendance-info-value" id="nextBonus">7 days</div>
-                            <div class="attendance-info-label">Until Next Bonus</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="frame-divider"></div>
-
-                <!-- Invite Friends -->
-                <div class="referral-section">
-                    <div class="referral-header">
-                        <i class="fas fa-user-plus"></i>
-                        <h3>Invite Friends</h3>
-                    </div>
-                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">
-                        Share your referral code and earn <strong>5 PCH</strong> for each friend who joins!
-                    </p>
-                    
-                    <div class="referral-code-box">
-                        <div class="referral-code-display" id="referralCodeDisplay">-----</div>
-                        <button class="btn-primary btn-small" onclick="copyReferralCode()">
-                            <i class="fas fa-copy"></i> Copy
-                        </button>
-                    </div>
-                    
-                    <div class="referral-stats">
-                        <div class="referral-stat">
-                            <div class="referral-stat-value" id="invitedCount">0</div>
-                            <div class="referral-stat-label">Friends Invited</div>
-                        </div>
-                        <div class="referral-stat">
-                            <div class="referral-stat-value" id="referralRewards">0 PCH</div>
-                            <div class="referral-stat-label">Total Earned</div>
-                        </div>
-                    </div>
-                    
-                    <div class="invite-list" id="inviteList">
-                        <p class="empty-invites">No invites yet. Share your code!</p>
-                    </div>
-                </div>
-
-                <div class="frame-divider"></div>
-
-                <!-- Social Airdrop -->
-                <div class="social-airdrop-section">
-                    <div class="social-header">
-                        <i class="fas fa-share-alt"></i>
-                        <h3>PocketChain Social Airdrop</h3>
-                        <p>Join our community and earn up to 30 PCH tokens</p>
-                    </div>
-
-                    <div class="social-tasks">
-                        <div class="task-card">
-                            <div class="task-icon"><i class="fab fa-discord"></i></div>
-                            <div class="task-info">
-                                <h4>Join Discord</h4>
-                                <p>Join our official Discord server</p>
-                            </div>
-                            <div class="task-reward">+10 PCH</div>
-                            <button class="task-btn" id="task-discord" onclick="completeTask('discord')">Claim</button>
-                        </div>
-
-                        <div class="task-card">
-                            <div class="task-icon"><i class="fab fa-telegram"></i></div>
-                            <div class="task-info">
-                                <h4>Join Telegram</h4>
-                                <p>Join our Telegram community</p>
-                            </div>
-                            <div class="task-reward">+10 PCH</div>
-                            <button class="task-btn" id="task-telegram" onclick="completeTask('telegram')">Claim</button>
-                        </div>
-
-                        <div class="task-card">
-                            <div class="task-icon"><i class="fab fa-twitter"></i></div>
-                            <div class="task-info">
-                                <h4>Follow on X</h4>
-                                <p>Follow @PocketChain</p>
-                            </div>
-                            <div class="task-reward">+10 PCH</div>
-                            <button class="task-btn" id="task-twitter" onclick="completeTask('twitter')">Claim</button>
-                        </div>
-                    </div>
-
-                    <div class="social-total">
-                        <div class="social-total-label">Total Earned</div>
-                        <div class="social-total-value" id="airdropTotal">0 PCH</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Leaderboard - SEPARATE -->
-            <div class="leaderboard-section">
-                <div class="leaderboard-header">
-                    <i class="fas fa-trophy"></i>
-                    <h3>Leaderboard</h3>
-                    <p>Top earners this month</p>
-                </div>
-                
-                <div class="leaderboard-tabs">
-                    <button class="leaderboard-tab active" onclick="switchLeaderboard('earners')">Top Earners</button>
-                    <button class="leaderboard-tab" onclick="switchLeaderboard('referrers')">Top Referrers</button>
-                </div>
-
-                <div class="leaderboard-list" id="leaderboardList">
-                    <!-- Populated by JS -->
-                </div>
-            </div>
-        </div>
-
-        <!-- ACCOUNT PAGE -->
-        <div id="account" class="page">
-            <div class="dashboard-header">
-                <div class="welcome-text">
-                    <h1>My Account</h1>
-                    <p>Manage your profile, security, and KYC</p>
-                </div>
-            </div>
-
-            <!-- KYC Section -->
-            <div class="kyc-section">
-                <div class="kyc-header">
-                    <h3><i class="fas fa-id-card"></i> KYC Verification</h3>
-                    <span class="kyc-badge unverified" id="kycStatusBadge">
-                        <i class="fas fa-times-circle"></i> Not Verified
-                    </span>
-                </div>
-                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;" id="kycStatusText">
-                    Complete KYC to unlock all features and higher withdrawal limits
-                </p>
-                
-                <button class="btn-primary" onclick="openKYCModal()">
-                    <i class="fas fa-shield-alt"></i> Complete KYC
-                </button>
-                
-                <div id="kycSubmitted" style="display: none;"></div>
-            </div>
-
-            <div class="card">
-                <div class="account-section">
-                    <h3><i class="fas fa-user"></i> Personal Information</h3>
-                    <div class="info-row">
-                        <span class="info-label">Full Name</span>
-                        <span class="info-value" id="accountFullName">-</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Email</span>
-                        <span class="info-value" id="accountEmail">-</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Username</span>
-                        <span class="info-value" id="accountUsername">-</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Age</span>
-                        <span class="info-value" id="accountAge">-</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Member Since</span>
-                        <span class="info-value" id="accountJoined">-</span>
-                    </div>
-                </div>
-
-                <div class="account-section">
-                    <h3><i class="fas fa-lock"></i> Security</h3>
-                    <div class="info-row security-row">
-                        <div>
-                            <div class="security-title">Password</div>
-                            <div class="security-desc">Last changed recently</div>
-                        </div>
-                        <button class="btn-secondary btn-small" onclick="showToast('Coming Soon', 'Password change feature in development')">
-                            Change Password
-                        </button>
-                    </div>
-                </div>
-
-                <div class="account-section">
-                    <h3><i class="fas fa-wallet"></i> Connected Wallet</h3>
-                    <div class="info-row">
-                        <span class="info-label">Address</span>
-                        <span class="info-value" id="accountWallet">Not connected</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- SUPPORT PAGE -->
-        <div id="support" class="page">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title"><i class="fas fa-headset"></i> Help & Support</h2>
-                </div>
-
-                <div class="support-card">
-                    <h3><i class="fas fa-envelope"></i> Contact Support</h3>
-                    <p>Have an issue? Send us a message and we'll respond within 24 hours.</p>
-                    
-                    <div class="form-group">
-                        <label>Subject</label>
-                        <input type="text" class="form-input" id="supportSubject" placeholder="What's your issue about?">
-                    </div>
-                    <div class="form-group">
-                        <label>Message</label>
-                        <textarea id="supportMessage" placeholder="Describe your problem in detail..."></textarea>
-                    </div>
-                    <button class="btn-primary" onclick="submitSupport()">
-                        <i class="fas fa-paper-plane"></i> Submit Ticket
-                    </button>
-                </div>
-
-                <div class="support-card">
-                    <h3 class="bug-title"><i class="fas fa-bug"></i> Report a Problem</h3>
-                    <p>Found a bug? Help us improve by reporting technical issues.</p>
-                    <button class="btn-primary btn-danger" onclick="openBugModal()">
-                        <i class="fas fa-exclamation-triangle"></i> Report Bug
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- TERMS PAGE -->
-        <div id="terms" class="page">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title"><i class="fas fa-shield-alt"></i> Terms & Policies</h2>
-                </div>
-                <div class="terms-content">
-                    <h3>1. Acceptance of Terms</h3>
-                    <p>By accessing and using PocketChain, you agree to be bound by these Terms and Conditions.</p>
-                    
-                    <h3>2. Staking Agreement</h3>
-                    <ul>
-                        <li>All stakes are final and cannot be withdrawn before the lock period ends.</li>
-                        <li>Rewards are calculated based on the APY rate at the time of staking.</li>
-                        <li>Early withdrawal is not permitted under any circumstances.</li>
-                    </ul>
-                    
-                    <h3>3. Risk Disclosure</h3>
-                    <p>Cryptocurrency staking involves significant risk. Past performance does not guarantee future results.</p>
-                    
-                    <h3>4. User Responsibilities</h3>
-                    <ul>
-                        <li>Maintain security of your wallet and private keys.</li>
-                        <li>Ensure sufficient balance for gas fees.</li>
-                        <li>Verify all transaction details before confirming.</li>
-                    </ul>
-                    
-                    <h3>5. Privacy Policy</h3>
-                    <p>We collect minimal data necessary for platform operation. Your wallet information is never stored on our servers.</p>
-                    
-                    <h3>6. KYC Policy</h3>
-                    <p>Users must complete KYC verification to access full platform features. Verification typically takes 24-48 hours.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Wallet Modal -->
-    <div class="modal" id="walletModal">
-        <div class="modal-content">
-            <button class="close-modal" onclick="closeWalletModal()"><i class="fas fa-times"></i></button>
-            <div class="modal-header">
-                <h3 class="modal-title">Connect Wallet</h3>
-                <p class="modal-subtitle">Choose your preferred wallet provider</p>
-            </div>
-            <div class="modal-body">
-                <div class="wallet-grid">
-                    <div class="wallet-option" onclick="connectWallet('metamask')">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22><rect fill=%22%23f6851b%22 width=%2240%22 height=%2240%22 rx=%228%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23fff%22 font-size=%2214%22>MM</text></svg>'">
-                        <div>MetaMask</div>
-                    </div>
-                    <div class="wallet-option" onclick="connectWallet('okx')">
-                        <img src="https://www.okx.com/cdn/assets/imgs/247/58E1F9F55D3E34C3.png" alt="OKX" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22><rect fill=%22%23000%22 width=%2240%22 height=%2240%22 rx=%228%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23fff%22 font-size=%2214%22>OKX</text></svg>'">
-                        <div>OKX Wallet</div>
-                    </div>
-                    <div class="wallet-option" onclick="connectWallet('phantom')">
-                        <img src="https://phantom.app/img/phantom-logo.svg" alt="Phantom" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22><rect fill=%22%23534ff%22 width=%2240%22 height=%2240%22 rx=%228%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23fff%22 font-size=%2214%22>PH</text></svg>'">
-                        <div>Phantom</div>
-                    </div>
-                    <div class="wallet-option" onclick="connectWallet('walletconnect')">
-                        <img src="https://raw.githubusercontent.com/WalletConnect/walletconnect-assets/master/Logo/Blue%20(Default)/Logo.svg" alt="WalletConnect" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22><rect fill=%22%233b99fc%22 width=%2240%22 height=%2240%22 rx=%228%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23fff%22 font-size=%2214%22>WC</text></svg>'">
-                        <div>WalletConnect</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Auth Modal -->
-    <div class="modal" id="authModal">
-        <div class="modal-content">
-            <button class="close-modal" onclick="closeAuthModal()"><i class="fas fa-times"></i></button>
+    // Camera Functions
+    async openCamera() {
+        try {
+            this.stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    facingMode: 'user',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                } 
+            });
             
-            <!-- Login Form -->
-            <div id="loginForm">
-                <div class="modal-header">
-                    <h3 class="modal-title">Welcome Back</h3>
-                    <p class="modal-subtitle">Sign in to your PocketChain account</p>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label>Email or Username</label>
-                        <input type="text" class="form-input" id="loginEmail" placeholder="Enter your email">
-                    </div>
-                    <div class="form-group">
-                        <label>Password</label>
-                        <div class="password-wrapper">
-                            <input type="password" class="form-input" id="loginPassword" placeholder="Enter your password">
-                            <button class="toggle-password" onclick="togglePassword('loginPassword', this)">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="error-msg" id="loginError">Invalid credentials</div>
-                    <button class="btn-submit" onclick="handleLogin()">Sign In</button>
-                    <div class="auth-switch">
-                        Don't have an account? <a onclick="switchAuth('signup')">Create one</a>
-                    </div>
-                </div>
-            </div>
+            const video = document.getElementById('cameraVideo');
+            const canvas = document.getElementById('cameraCanvas');
+            
+            if (video) {
+                video.srcObject = this.stream;
+                video.style.display = 'block';
+            }
+            if (canvas) canvas.style.display = 'none';
+            
+            document.getElementById('captureBtn').style.display = 'block';
+            document.getElementById('retakeBtn').style.display = 'none';
+            document.getElementById('confirmBtn').style.display = 'none';
+            
+        } catch (err) {
+            console.error('Camera error:', err);
+            showToast('Error', 'Could not access camera. Please allow camera permissions.', 'error');
+        }
+    }
 
-            <!-- Signup Form -->
-            <div id="signupForm" style="display: none;">
-                <div class="modal-header">
-                    <h3 class="modal-title">Create Account</h3>
-                    <p class="modal-subtitle">Join the PocketChain ecosystem</p>
-                </div>
-                <div class="modal-body">
-                    <div class="name-row">
-                        <div class="form-group">
-                            <label>First Name</label>
-                            <input type="text" class="form-input" id="regFirstName" placeholder="First name">
-                        </div>
-                        <div class="form-group">
-                            <label>Last Name</label>
-                            <input type="text" class="form-input" id="regLastName" placeholder="Last name">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Email Address</label>
-                        <input type="email" class="form-input" id="regEmail" placeholder="your@email.com">
-                    </div>
-                    <div class="form-group">
-                        <label>Birth Date</label>
-                        <div class="date-row">
-                            <select class="date-select" id="regDay">
-                                <option value="">Day</option>
-                            </select>
-                            <select class="date-select" id="regMonth">
-                                <option value="">Month</option>
-                            </select>
-                            <select class="date-select" id="regYear">
-                                <option value="">Year</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Age (Auto-calculated)</label>
-                        <input type="number" class="form-input" id="regAge" placeholder="Must be 18 or older" min="18" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label>Password</label>
-                        <div class="password-wrapper">
-                            <input type="password" class="form-input" id="regPassword" placeholder="Min 8 characters">
-                            <button class="toggle-password" onclick="togglePassword('regPassword', this)">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        </div>
-                        <div class="password-strength-container">
-                            <div class="strength-bar-bg">
-                                <div class="strength-bar" id="passwordStrength"></div>
-                            </div>
-                            <span class="strength-text" id="strengthText"></span>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Confirm Password</label>
-                        <div class="password-wrapper">
-                            <input type="password" class="form-input" id="regConfirmPassword" placeholder="Confirm password">
-                            <button class="toggle-password" onclick="togglePassword('regConfirmPassword', this)">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="error-msg" id="signupError"></div>
-                    <button class="btn-submit" onclick="handleSignup()">Create Account</button>
-                    <div class="auth-switch">
-                        Already have an account? <a onclick="switchAuth('login')">Sign in</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    closeCamera() {
+        if (this.stream) {
+            this.stream.getTracks().forEach(track => track.stop());
+            this.stream = null;
+        }
+    }
 
-    <!-- Send Modal -->
-    <div class="modal" id="sendModal">
-        <div class="modal-content">
-            <button class="close-modal" onclick="closeSendModal()"><i class="fas fa-times"></i></button>
-            <div class="modal-header">
-                <h3 class="modal-title">Send PCH</h3>
-                <p class="modal-subtitle">Transfer tokens to another wallet</p>
-            </div>
-            <div class="modal-body">
-                <div class="chain-indicator">
-                    <span class="chain-badge" id="sendChainBadge">Onchain</span>
-                </div>
-                <div class="form-group">
-                    <label>Recipient Address</label>
-                    <input type="text" class="form-input" id="sendAddress" placeholder="0x...">
-                </div>
-                <div class="form-group">
-                    <label>Amount</label>
-                    <input type="number" class="form-input" id="sendAmount" placeholder="0.00">
-                    <div class="input-meta">
-                        <span class="balance-display">Available: <span id="sendAvailableBalance">0.00</span> PCH</span>
-                    </div>
-                </div>
-                <button class="btn-submit" onclick="executeSend()">Send Tokens</button>
-            </div>
-        </div>
-    </div>
+    capturePhoto() {
+        const video = document.getElementById('cameraVideo');
+        const canvas = document.getElementById('cameraCanvas');
+        
+        if (!video || !canvas) return;
+        
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        video.style.display = 'none';
+        canvas.style.display = 'block';
+        
+        this.capturedImage = canvas.toDataURL('image/jpeg', 0.9);
+        
+        document.getElementById('captureBtn').style.display = 'none';
+        document.getElementById('retakeBtn').style.display = 'block';
+        document.getElementById('confirmBtn').style.display = 'block';
+    }
 
-    <!-- Receive Modal -->
-    <div class="modal" id="receiveModal">
-        <div class="modal-content">
-            <button class="close-modal" onclick="closeReceiveModal()"><i class="fas fa-times"></i></button>
-            <div class="modal-header">
-                <h3 class="modal-title">Receive PCH</h3>
-                <p class="modal-subtitle">Your wallet address</p>
-            </div>
-            <div class="modal-body receive-body">
-                <div class="chain-indicator">
-                    <span class="chain-badge" id="receiveChainBadge">Onchain</span>
-                </div>
-                <div class="qr-placeholder">
-                    <div class="qr-code" id="receiveQR">QR CODE</div>
-                </div>
-                <div class="form-group">
-                    <label>Your Address</label>
-                    <div class="address-row">
-                        <input type="text" class="form-input" id="receiveAddress" readonly value="Not connected">
-                        <button onclick="copyAddress()" class="copy-btn">Copy</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    retakePhoto() {
+        const video = document.getElementById('cameraVideo');
+        const canvas = document.getElementById('cameraCanvas');
+        
+        if (video) video.style.display = 'block';
+        if (canvas) canvas.style.display = 'none';
+        
+        this.capturedImage = null;
+        
+        document.getElementById('captureBtn').style.display = 'block';
+        document.getElementById('retakeBtn').style.display = 'none';
+        document.getElementById('confirmBtn').style.display = 'none';
+    }
 
-    <!-- Convert Modal - BIDIRECTIONAL -->
-    <div class="modal" id="convertModal">
-        <div class="modal-content">
-            <button class="close-modal" onclick="closeConvertModal()"><i class="fas fa-times"></i></button>
-            <div class="modal-header">
-                <h3 class="modal-title">Convert</h3>
-                <p class="modal-subtitle">Swap between PCH and other cryptocurrencies</p>
-            </div>
-            <div class="modal-body">
-                <!-- Direction Toggle -->
-                <div class="convert-direction-toggle">
-                    <button class="direction-btn active" id="pchToCryptoBtn" onclick="setConvertDirection('pchToCrypto')">
-                        PCH → Crypto
-                    </button>
-                    <button class="direction-btn" id="cryptoToPchBtn" onclick="setConvertDirection('cryptoToPch')">
-                        Crypto → PCH
-                    </button>
-                </div>
+    confirmPhoto() {
+        if (!this.capturedImage) return;
+        
+        const preview = document.getElementById('selfiePreview');
+        const filename = document.getElementById('selfieFileName');
+        
+        if (preview) {
+            preview.innerHTML = `<img src="${this.capturedImage}" alt="Selfie Preview">`;
+            preview.classList.add('has-preview');
+        }
+        if (filename) filename.textContent = 'selfie_capture.jpg';
+        
+        const selfieInput = document.getElementById('kycSelfieFile');
+        if (selfieInput) {
+            fetch(this.capturedImage)
+                .then(res => res.blob())
+                .then(blob => {
+                    const file = new File([blob], 'selfie_capture.jpg', { type: 'image/jpeg' });
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    selfieInput.files = dataTransfer.files;
+                });
+        }
+        
+        this.closeCamera();
+        closeCameraModal();
+        showToast('Success', 'Selfie captured successfully');
+    }
+}
 
-                <div class="convert-box">
-                    <div class="form-group">
-                        <label id="convertFromLabel">From (PCH)</label>
-                        <input type="number" class="form-input" id="convertFromAmount" placeholder="0.00" oninput="updateConvertRates()">
-                    </div>
-                    <div class="convert-arrow" onclick="swapConvertDirection()">
-                        <i class="fas fa-exchange-alt"></i>
-                    </div>
-                    <div class="form-group">
-                        <label id="convertToLabel">To</label>
-                        <select class="form-input" id="convertToCurrency" onchange="updateConvertRates()">
-                            <option value="USDT">USDT</option>
-                            <option value="USDC">USDC</option>
-                            <option value="BTC">BTC</option>
-                            <option value="ETH">ETH</option>
-                            <option value="SOL">SOL</option>
-                            <option value="XRP">XRP</option>
-                            <option value="POL">POL</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="convert-result">
-                    <div class="convert-result-label">You will receive</div>
-                    <div class="convert-result-value" id="convertToAmount">0.00</div>
-                </div>
-                
-                <div class="convert-rate-info">
-                    <i class="fas fa-info-circle"></i> 
-                    <span id="convertRateText">Rate: 1 PCH = $0.045 USDT</span>
-                </div>
-                
-                <button class="btn-submit" onclick="executeConvert()">Convert Now</button>
-            </div>
-        </div>
-    </div>
+// Initialize KYC
+let kycSystem;
+document.addEventListener('DOMContentLoaded', () => {
+    kycSystem = new KYCSystem();
+});
 
-    <!-- Withdraw Modal - WITH WALLET INTEGRATION -->
-    <div class="modal" id="withdrawModal">
-        <div class="modal-content">
-            <button class="close-modal" onclick="closeWithdrawModal()"><i class="fas fa-times"></i></button>
-            <div class="modal-header">
-                <h3 class="modal-title">Withdraw PCH</h3>
-                <p class="modal-subtitle">Withdraw to your connected wallet</p>
-            </div>
-            <div class="modal-body">
-                <div class="wallet-status-box" id="withdrawWalletStatus">
-                    <i class="fas fa-wallet"></i>
-                    <div class="wallet-status-text">
-                        <span id="withdrawWalletText">No wallet connected</span>
-                        <button class="btn-primary btn-small" onclick="connectWalletForWithdraw()">Connect Wallet</button>
-                    </div>
-                </div>
+// Global functions
+function openKYCModal() {
+    const modal = document.getElementById('kycModal');
+    if (modal) {
+        modal.classList.add('active');
+        kycSystem.updateKYCStatus();
+    }
+}
 
-                <div class="form-group">
-                    <label>Withdrawal Amount</label>
-                    <input type="number" class="form-input" id="withdrawAmount" placeholder="0.00">
-                    <div class="input-meta">
-                        <span class="balance-display">Available: <span id="withdrawAvailableBalance">0.00</span> PCH</span>
-                    </div>
-                </div>
+function closeKYCModal() {
+    const modal = document.getElementById('kycModal');
+    if (modal) modal.classList.remove('active');
+}
 
-                <div class="form-group">
-                    <label>Destination Address</label>
-                    <input type="text" class="form-input" id="withdrawAddress" placeholder="0x..." readonly>
-                </div>
+function handleKYCFile(input, previewId, filenameId) {
+    const file = input.files[0];
+    if (!file) return;
 
-                <div class="withdraw-fee-info">
-                    <div class="fee-row">
-                        <span>Network Fee</span>
-                        <span>0.5 PCH</span>
-                    </div>
-                    <div class="fee-row total">
-                        <span>Total Deduction</span>
-                        <span id="totalDeduction">0.00 PCH</span>
-                    </div>
-                </div>
-                
-                <button class="btn-submit" id="withdrawSubmitBtn" onclick="executeWithdraw()" disabled>
-                    Connect Wallet to Withdraw
-                </button>
-            </div>
-        </div>
-    </div>
+    const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+    const maxSize = 5 * 1024 * 1024;
 
-    <!-- Bug Report Modal -->
-    <div class="modal" id="bugModal">
-        <div class="modal-content">
-            <button class="close-modal" onclick="closeBugModal()"><i class="fas fa-times"></i></button>
-            <div class="modal-header">
-                <h3 class="modal-title">Report Bug</h3>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>Issue Type</label>
-                    <select class="form-input" id="bugType">
-                        <option>UI/Display Issue</option>
-                        <option>Wallet Connection</option>
-                        <option>Staking Problem</option>
-                        <option>Transaction Failed</option>
-                        <option>Other</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Description</label>
-                    <textarea id="bugDesc" placeholder="Describe the issue..."></textarea>
-                </div>
-                <button class="btn-submit" onclick="submitBug()">Submit Report</button>
-            </div>
-        </div>
-    </div>
+    if (!validTypes.includes(file.type)) {
+        showToast('Error', 'Invalid file type. Use JPG, PNG, or PDF', 'error');
+        input.value = '';
+        return;
+    }
 
-    <!-- KYC Modal - WITH CAMERA -->
-    <div class="modal" id="kycModal">
-        <div class="modal-content" style="max-width: 500px;">
-            <button class="close-modal" onclick="closeKYCModal()"><i class="fas fa-times"></i></button>
-            <div class="modal-header">
-                <h3 class="modal-title">KYC Verification</h3>
-                <p class="modal-subtitle">Verify your identity to unlock full features</p>
-            </div>
-            <div class="modal-body">
-                <form id="kycForm">
-                    <div class="kyc-form-row">
-                        <div class="form-group">
-                            <label>Full Name (as per ID)</label>
-                            <input type="text" class="form-input" id="kycFullName" placeholder="John Doe">
-                        </div>
-                        <div class="form-group">
-                            <label>Date of Birth</label>
-                            <input type="date" class="form-input" id="kycBirthDate">
-                        </div>
-                    </div>
-                    
-                    <div class="kyc-form-row">
-                        <div class="form-group">
-                            <label>Nationality</label>
-                            <select class="form-input" id="kycNationality">
-                                <option value="">Select Country</option>
-                                <option value="US">United States</option>
-                                <option value="UK">United Kingdom</option>
-                                <option value="CA">Canada</option>
-                                <option value="AU">Australia</option>
-                                <option value="PH">Philippines</option>
-                                <option value="SG">Singapore</option>
-                                <option value="JP">Japan</option>
-                                <option value="KR">South Korea</option>
-                                <option value="OTHER">Other</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>ID Type</label>
-                            <select class="form-input" id="kycIdType">
-                                <option value="">Select ID Type</option>
-                                <option value="passport">Passport</option>
-                                <option value="drivers_license">Driver's License</option>
-                                <option value="national_id">National ID</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>ID Number</label>
-                        <input type="text" class="form-input" id="kycIdNumber" placeholder="Enter ID number">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Address</label>
-                        <input type="text" class="form-input" id="kycAddress" placeholder="Street address">
-                    </div>
-                    
-                    <div class="kyc-form-row">
-                        <div class="form-group">
-                            <label>City</label>
-                            <input type="text" class="form-input" id="kycCity" placeholder="City">
-                        </div>
-                        <div class="form-group">
-                            <label>Country</label>
-                            <select class="form-input" id="kycCountry">
-                                <option value="">Select Country</option>
-                                <option value="US">United States</option>
-                                <option value="UK">United Kingdom</option>
-                                <option value="CA">Canada</option>
-                                <option value="AU">Australia</option>
-                                <option value="PH">Philippines</option>
-                                <option value="SG">Singapore</option>
-                                <option value="JP">Japan</option>
-                                <option value="KR">South Korea</option>
-                                <option value="OTHER">Other</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Phone Number</label>
-                        <input type="tel" class="form-input" id="kycPhone" placeholder="+1 234 567 8900">
-                    </div>
-                    
-                    <div class="kyc-form-row">
-                        <div class="form-group">
-                            <label>ID Document</label>
-                            <div class="kyc-file-upload" onclick="document.getElementById('kycIdFile').click()">
-                                <input type="file" id="kycIdFile" accept="image/*,.pdf" style="display: none;" onchange="handleKYCFile(this, 'idPreview', 'idFileName')">
-                                <div class="file-upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                                <div class="file-upload-text" id="idFileName">Upload ID (JPG, PNG, PDF)</div>
-                                <div class="file-upload-hint">Max 5MB</div>
-                            </div>
-                            <div class="file-preview" id="idPreview"></div>
-                        </div>
-                        <div class="form-group">
-                            <label>Selfie with ID</label>
-                            <div class="kyc-file-upload" onclick="openCameraModal()">
-                                <input type="file" id="kycSelfieFile" accept="image/*" style="display: none;" onchange="handleKYCFile(this, 'selfiePreview', 'selfieFileName')">
-                                <div class="file-upload-icon"><i class="fas fa-camera"></i></div>
-                                <div class="file-upload-text" id="selfieFileName">Take Selfie</div>
-                                <div class="file-upload-hint">Click to open camera</div>
-                            </div>
-                            <div class="file-preview" id="selfiePreview"></div>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="btn-submit" style="margin-top: 20px;">
-                        <i class="fas fa-shield-alt"></i> Submit KYC
-                    </button>
-                </form>
-                
-                <div id="kycSubmittedView" style="display: none;"></div>
-            </div>
-        </div>
-    </div>
+    if (file.size > maxSize) {
+        showToast('Error', 'File too large. Max 5MB allowed', 'error');
+        input.value = '';
+        return;
+    }
 
-    <!-- Camera Modal -->
-    <div class="modal" id="cameraModal">
-        <div class="modal-content" style="max-width: 500px;">
-            <button class="close-modal" onclick="closeCameraModal()"><i class="fas fa-times"></i></button>
-            <div class="modal-header">
-                <h3 class="modal-title">Take Selfie</h3>
-                <p class="modal-subtitle">Position your face clearly in the frame</p>
-            </div>
-            <div class="modal-body">
-                <div class="camera-container">
-                    <video id="cameraVideo" autoplay playsinline></video>
-                    <canvas id="cameraCanvas" style="display: none;"></canvas>
-                    <div class="camera-overlay">
-                        <div class="face-guide"></div>
-                    </div>
-                </div>
-                <div class="camera-controls">
-                    <button class="btn-primary" id="captureBtn" onclick="capturePhoto()">
-                        <i class="fas fa-camera"></i> Capture
-                    </button>
-                    <button class="btn-secondary" id="retakeBtn" onclick="retakePhoto()" style="display: none;">
-                        <i class="fas fa-redo"></i> Retake
-                    </button>
-                    <button class="btn-primary" id="confirmBtn" onclick="confirmPhoto()" style="display: none;">
-                        <i class="fas fa-check"></i> Confirm
-                    </button>
-                </div>
-                <p class="camera-hint">Make sure your face is well-lit and clearly visible</p>
-            </div>
-        </div>
-    </div>
+    const preview = document.getElementById(previewId);
+    const filename = document.getElementById(filenameId);
+    
+    if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            if (preview) {
+                preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+                preview.classList.add('has-preview');
+            }
+        };
+        reader.readAsDataURL(file);
+    } else {
+        if (preview) {
+            preview.innerHTML = `<div class="file-icon"><i class="fas fa-file-pdf"></i><span>PDF Document</span></div>`;
+            preview.classList.add('has-preview');
+        }
+    }
+    
+    if (filename) filename.textContent = file.name;
+}
 
-    <!-- Toast -->
-    <div class="toast" id="toast">
-        <i class="fas fa-check-circle toast-icon"></i>
-        <div class="toast-content">
-            <div class="toast-title" id="toastTitle">Success</div>
-            <div class="toast-message" id="toastMessage">Operation completed</div>
-        </div>
-    </div>
+function openCameraModal() {
+    const modal = document.getElementById('cameraModal');
+    if (modal) {
+        modal.classList.add('active');
+        kycSystem.openCamera();
+    }
+}
 
-    <script src="script.js"></script>
-    <script src="kyc.js"></script>
-</body>
-</html>
+function closeCameraModal() {
+    const modal = document.getElementById('cameraModal');
+    if (modal) {
+        modal.classList.remove('active');
+        kycSystem.closeCamera();
+    }
+}
+
+function capturePhoto() {
+    kycSystem.capturePhoto();
+}
+
+function retakePhoto() {
+    kycSystem.retakePhoto();
+}
+
+function confirmPhoto() {
+    kycSystem.confirmPhoto();
+}
