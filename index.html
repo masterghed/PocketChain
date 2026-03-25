@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -278,13 +277,23 @@
             </div>
         </div>
 
-        <!-- ASSET PAGE -->
+        <!-- ASSET PAGE - WITH ONCHAIN/OFFCHAIN -->
         <div id="asset" class="page">
             <div class="dashboard-header">
                 <div class="welcome-text">
                     <h1>My Assets</h1>
                     <p>Manage your PCH portfolio</p>
                 </div>
+            </div>
+
+            <!-- Chain Toggle -->
+            <div class="chain-toggle-container">
+                <button class="chain-toggle-btn active" id="onchainBtn" onclick="switchChain('onchain')">
+                    <i class="fas fa-link"></i> Onchain
+                </button>
+                <button class="chain-toggle-btn" id="offchainBtn" onclick="switchChain('offchain')">
+                    <i class="fas fa-server"></i> Offchain
+                </button>
             </div>
 
             <div class="asset-overview">
@@ -501,7 +510,7 @@
             </div>
         </div>
 
-        <!-- AIRDROP PAGE -->
+        <!-- AIRDROP PAGE - UNIFIED FRAME -->
         <div id="airdrop" class="page">
             <div class="dashboard-header">
                 <div class="welcome-text">
@@ -510,109 +519,136 @@
                 </div>
             </div>
 
-            <!-- Attendance Section -->
-            <div class="attendance-section">
-                <div class="attendance-header">
-                    <i class="fas fa-calendar-check"></i>
-                    <h3>Daily Attendance</h3>
-                    <p>Claim daily rewards and build your streak!</p>
-                </div>
-                
-                <div class="attendance-streak">
-                    <span class="streak-number" id="attendanceStreak">0</span>
-                    <span class="streak-label">day streak</span>
-                </div>
-                
-                <button class="daily-claim-btn" id="dailyClaimBtn" onclick="claimDailyReward()">
-                    Claim Daily Reward
-                </button>
-                
-                <div class="attendance-info">
-                    <div class="attendance-info-item">
-                        <div class="attendance-info-value" id="totalClaims">0</div>
-                        <div class="attendance-info-label">Total Claims</div>
+            <!-- Unified Glass Frame -->
+            <div class="unified-airdrop-frame">
+                <!-- Daily Attendance -->
+                <div class="attendance-section">
+                    <div class="attendance-header">
+                        <i class="fas fa-calendar-check"></i>
+                        <h3>Daily Attendance</h3>
+                        <p>Claim daily rewards and build your streak!</p>
                     </div>
-                    <div class="attendance-info-item">
-                        <div class="attendance-info-value" id="nextBonus">7 days</div>
-                        <div class="attendance-info-label">Until Next Bonus</div>
+                    
+                    <div class="attendance-streak">
+                        <span class="streak-number" id="attendanceStreak">0</span>
+                        <span class="streak-label">day streak</span>
                     </div>
-                </div>
-            </div>
-
-            <!-- Referral Section -->
-            <div class="referral-section">
-                <div class="referral-header">
-                    <i class="fas fa-user-plus"></i>
-                    <h3>Invite Friends</h3>
-                </div>
-                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">
-                    Share your referral code and earn <strong>5 PCH</strong> for each friend who joins!
-                </p>
-                
-                <div class="referral-code-box">
-                    <div class="referral-code-display" id="referralCodeDisplay">-----</div>
-                    <button class="btn-primary btn-small" onclick="copyReferralCode()">
-                        <i class="fas fa-copy"></i> Copy
+                    
+                    <button class="daily-claim-btn" id="dailyClaimBtn" onclick="claimDailyReward()">
+                        Claim Daily Reward
                     </button>
-                </div>
-                
-                <div class="referral-stats">
-                    <div class="referral-stat">
-                        <div class="referral-stat-value" id="invitedCount">0</div>
-                        <div class="referral-stat-label">Friends Invited</div>
+                    
+                    <div class="attendance-info">
+                        <div class="attendance-info-item">
+                            <div class="attendance-info-value" id="totalClaims">0</div>
+                            <div class="attendance-info-label">Total Claims</div>
+                        </div>
+                        <div class="attendance-info-item">
+                            <div class="attendance-info-value" id="nextBonus">7 days</div>
+                            <div class="attendance-info-label">Until Next Bonus</div>
+                        </div>
                     </div>
-                    <div class="referral-stat">
-                        <div class="referral-stat-value" id="referralRewards">0 PCH</div>
-                        <div class="referral-stat-label">Total Earned</div>
+                </div>
+
+                <div class="frame-divider"></div>
+
+                <!-- Invite Friends -->
+                <div class="referral-section">
+                    <div class="referral-header">
+                        <i class="fas fa-user-plus"></i>
+                        <h3>Invite Friends</h3>
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">
+                        Share your referral code and earn <strong>5 PCH</strong> for each friend who joins!
+                    </p>
+                    
+                    <div class="referral-code-box">
+                        <div class="referral-code-display" id="referralCodeDisplay">-----</div>
+                        <button class="btn-primary btn-small" onclick="copyReferralCode()">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    
+                    <div class="referral-stats">
+                        <div class="referral-stat">
+                            <div class="referral-stat-value" id="invitedCount">0</div>
+                            <div class="referral-stat-label">Friends Invited</div>
+                        </div>
+                        <div class="referral-stat">
+                            <div class="referral-stat-value" id="referralRewards">0 PCH</div>
+                            <div class="referral-stat-label">Total Earned</div>
+                        </div>
+                    </div>
+                    
+                    <div class="invite-list" id="inviteList">
+                        <p class="empty-invites">No invites yet. Share your code!</p>
                     </div>
                 </div>
-                
-                <div class="invite-list" id="inviteList">
-                    <p class="empty-invites">No invites yet. Share your code!</p>
+
+                <div class="frame-divider"></div>
+
+                <!-- Social Airdrop -->
+                <div class="social-airdrop-section">
+                    <div class="social-header">
+                        <i class="fas fa-share-alt"></i>
+                        <h3>PocketChain Social Airdrop</h3>
+                        <p>Join our community and earn up to 30 PCH tokens</p>
+                    </div>
+
+                    <div class="social-tasks">
+                        <div class="task-card">
+                            <div class="task-icon"><i class="fab fa-discord"></i></div>
+                            <div class="task-info">
+                                <h4>Join Discord</h4>
+                                <p>Join our official Discord server</p>
+                            </div>
+                            <div class="task-reward">+10 PCH</div>
+                            <button class="task-btn" id="task-discord" onclick="completeTask('discord')">Claim</button>
+                        </div>
+
+                        <div class="task-card">
+                            <div class="task-icon"><i class="fab fa-telegram"></i></div>
+                            <div class="task-info">
+                                <h4>Join Telegram</h4>
+                                <p>Join our Telegram community</p>
+                            </div>
+                            <div class="task-reward">+10 PCH</div>
+                            <button class="task-btn" id="task-telegram" onclick="completeTask('telegram')">Claim</button>
+                        </div>
+
+                        <div class="task-card">
+                            <div class="task-icon"><i class="fab fa-twitter"></i></div>
+                            <div class="task-info">
+                                <h4>Follow on X</h4>
+                                <p>Follow @PocketChain</p>
+                            </div>
+                            <div class="task-reward">+10 PCH</div>
+                            <button class="task-btn" id="task-twitter" onclick="completeTask('twitter')">Claim</button>
+                        </div>
+                    </div>
+
+                    <div class="social-total">
+                        <div class="social-total-label">Total Earned</div>
+                        <div class="social-total-value" id="airdropTotal">0 PCH</div>
+                    </div>
                 </div>
             </div>
 
-            <div class="airdrop-container">
-                <div class="airdrop-header">
-                    <h2>🚀 PocketChain Social Airdrop</h2>
-                    <p>Join our community and earn up to 30 PCH tokens</p>
+            <!-- Leaderboard - SEPARATE -->
+            <div class="leaderboard-section">
+                <div class="leaderboard-header">
+                    <i class="fas fa-trophy"></i>
+                    <h3>Leaderboard</h3>
+                    <p>Top earners this month</p>
+                </div>
+                
+                <div class="leaderboard-tabs">
+                    <button class="leaderboard-tab active" onclick="switchLeaderboard('earners')">Top Earners</button>
+                    <button class="leaderboard-tab" onclick="switchLeaderboard('referrers')">Top Referrers</button>
                 </div>
 
-                <div class="airdrop-tasks">
-                    <div class="task-card">
-                        <div class="task-icon"><i class="fab fa-discord"></i></div>
-                        <div class="task-info">
-                            <h4>Join Discord</h4>
-                            <p>Join our official Discord server</p>
-                        </div>
-                        <div class="task-reward">+10 PCH</div>
-                        <button class="task-btn" id="task-discord" onclick="completeTask('discord')">Claim</button>
-                    </div>
-
-                    <div class="task-card">
-                        <div class="task-icon"><i class="fab fa-telegram"></i></div>
-                        <div class="task-info">
-                            <h4>Join Telegram</h4>
-                            <p>Join our Telegram community</p>
-                        </div>
-                        <div class="task-reward">+10 PCH</div>
-                        <button class="task-btn" id="task-telegram" onclick="completeTask('telegram')">Claim</button>
-                    </div>
-
-                    <div class="task-card">
-                        <div class="task-icon"><i class="fab fa-twitter"></i></div>
-                        <div class="task-info">
-                            <h4>Follow on X</h4>
-                            <p>Follow @PocketChain</p>
-                        </div>
-                        <div class="task-reward">+10 PCH</div>
-                        <button class="task-btn" id="task-twitter" onclick="completeTask('twitter')">Claim</button>
-                    </div>
-                </div>
-
-                <div class="airdrop-total">
-                    <div class="airdrop-total-label">Total Earned</div>
-                    <div class="airdrop-total-value" id="airdropTotal">0 PCH</div>
+                <div class="leaderboard-list" id="leaderboardList">
+                    <!-- Populated by JS -->
                 </div>
             </div>
         </div>
@@ -735,35 +771,30 @@
                 </div>
                 <div class="terms-content">
                     <h3>1. Acceptance of Terms</h3>
-                    <p>By accessing and using PocketChain, you agree to be bound by these Terms and Conditions. If you disagree with any part of the terms, you may not access the platform.</p>
+                    <p>By accessing and using PocketChain, you agree to be bound by these Terms and Conditions.</p>
                     
                     <h3>2. Staking Agreement</h3>
                     <ul>
                         <li>All stakes are final and cannot be withdrawn before the lock period ends.</li>
                         <li>Rewards are calculated based on the APY rate at the time of staking.</li>
                         <li>Early withdrawal is not permitted under any circumstances.</li>
-                        <li>Minimum staking amounts vary by pool and must be maintained.</li>
                     </ul>
                     
                     <h3>3. Risk Disclosure</h3>
-                    <p>Cryptocurrency staking involves significant risk. Past performance does not guarantee future results. The value of tokens can fluctuate dramatically.</p>
+                    <p>Cryptocurrency staking involves significant risk. Past performance does not guarantee future results.</p>
                     
                     <h3>4. User Responsibilities</h3>
                     <ul>
                         <li>Maintain security of your wallet and private keys.</li>
                         <li>Ensure sufficient balance for gas fees.</li>
                         <li>Verify all transaction details before confirming.</li>
-                        <li>Do not share your login credentials with anyone.</li>
                     </ul>
                     
                     <h3>5. Privacy Policy</h3>
-                    <p>We collect minimal data necessary for platform operation. Your wallet information is never stored on our servers. Personal data is encrypted and protected.</p>
+                    <p>We collect minimal data necessary for platform operation. Your wallet information is never stored on our servers.</p>
                     
-                    <h3>6. Airdrop Terms</h3>
-                    <p>Social task rewards are subject to verification. Fake or bot accounts will be disqualified. Rewards are distributed within 48 hours of task completion.</p>
-                    
-                    <h3>7. KYC Policy</h3>
-                    <p>Users must complete KYC verification to access full platform features. All submitted documents are encrypted and stored securely. Verification typically takes 24-48 hours.</p>
+                    <h3>6. KYC Policy</h3>
+                    <p>Users must complete KYC verification to access full platform features. Verification typically takes 24-48 hours.</p>
                 </div>
             </div>
         </div>
@@ -780,19 +811,19 @@
             <div class="modal-body">
                 <div class="wallet-grid">
                     <div class="wallet-option" onclick="connectWallet('metamask')">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23fff%22>MM</text></svg>'">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22><rect fill=%22%23f6851b%22 width=%2240%22 height=%2240%22 rx=%228%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23fff%22 font-size=%2214%22>MM</text></svg>'">
                         <div>MetaMask</div>
                     </div>
                     <div class="wallet-option" onclick="connectWallet('okx')">
-                        <img src="https://www.okx.com/cdn/assets/imgs/247/58E1F9F55D3E34C3.png" alt="OKX" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23fff%22>OKX</text></svg>'">
+                        <img src="https://www.okx.com/cdn/assets/imgs/247/58E1F9F55D3E34C3.png" alt="OKX" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22><rect fill=%22%23000%22 width=%2240%22 height=%2240%22 rx=%228%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23fff%22 font-size=%2214%22>OKX</text></svg>'">
                         <div>OKX Wallet</div>
                     </div>
                     <div class="wallet-option" onclick="connectWallet('phantom')">
-                        <img src="https://phantom.app/img/phantom-logo.svg" alt="Phantom" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23fff%22>PH</text></svg>'">
+                        <img src="https://phantom.app/img/phantom-logo.svg" alt="Phantom" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22><rect fill=%22%23534ff%22 width=%2240%22 height=%2240%22 rx=%228%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23fff%22 font-size=%2214%22>PH</text></svg>'">
                         <div>Phantom</div>
                     </div>
                     <div class="wallet-option" onclick="connectWallet('walletconnect')">
-                        <img src="https://raw.githubusercontent.com/WalletConnect/walletconnect-assets/master/Logo/Blue%20(Default)/Logo.svg" alt="WalletConnect" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23fff%22>WC</text></svg>'">
+                        <img src="https://raw.githubusercontent.com/WalletConnect/walletconnect-assets/master/Logo/Blue%20(Default)/Logo.svg" alt="WalletConnect" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22><rect fill=%22%233b99fc%22 width=%2240%22 height=%2240%22 rx=%228%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23fff%22 font-size=%2214%22>WC</text></svg>'">
                         <div>WalletConnect</div>
                     </div>
                 </div>
@@ -915,6 +946,9 @@
                 <p class="modal-subtitle">Transfer tokens to another wallet</p>
             </div>
             <div class="modal-body">
+                <div class="chain-indicator">
+                    <span class="chain-badge" id="sendChainBadge">Onchain</span>
+                </div>
                 <div class="form-group">
                     <label>Recipient Address</label>
                     <input type="text" class="form-input" id="sendAddress" placeholder="0x...">
@@ -922,6 +956,9 @@
                 <div class="form-group">
                     <label>Amount</label>
                     <input type="number" class="form-input" id="sendAmount" placeholder="0.00">
+                    <div class="input-meta">
+                        <span class="balance-display">Available: <span id="sendAvailableBalance">0.00</span> PCH</span>
+                    </div>
                 </div>
                 <button class="btn-submit" onclick="executeSend()">Send Tokens</button>
             </div>
@@ -937,8 +974,11 @@
                 <p class="modal-subtitle">Your wallet address</p>
             </div>
             <div class="modal-body receive-body">
+                <div class="chain-indicator">
+                    <span class="chain-badge" id="receiveChainBadge">Onchain</span>
+                </div>
                 <div class="qr-placeholder">
-                    <div class="qr-code">QR CODE</div>
+                    <div class="qr-code" id="receiveQR">QR CODE</div>
                 </div>
                 <div class="form-group">
                     <label>Your Address</label>
@@ -951,26 +991,36 @@
         </div>
     </div>
 
-    <!-- Convert Modal -->
+    <!-- Convert Modal - BIDIRECTIONAL -->
     <div class="modal" id="convertModal">
         <div class="modal-content">
             <button class="close-modal" onclick="closeConvertModal()"><i class="fas fa-times"></i></button>
             <div class="modal-header">
-                <h3 class="modal-title">Convert PCH</h3>
-                <p class="modal-subtitle">Swap PCH to other cryptocurrencies</p>
+                <h3 class="modal-title">Convert</h3>
+                <p class="modal-subtitle">Swap between PCH and other cryptocurrencies</p>
             </div>
             <div class="modal-body">
+                <!-- Direction Toggle -->
+                <div class="convert-direction-toggle">
+                    <button class="direction-btn active" id="pchToCryptoBtn" onclick="setConvertDirection('pchToCrypto')">
+                        PCH → Crypto
+                    </button>
+                    <button class="direction-btn" id="cryptoToPchBtn" onclick="setConvertDirection('cryptoToPch')">
+                        Crypto → PCH
+                    </button>
+                </div>
+
                 <div class="convert-box">
                     <div class="form-group">
-                        <label>From (PCH)</label>
-                        <input type="number" class="form-input" id="convertFromAmount" placeholder="0.00">
+                        <label id="convertFromLabel">From (PCH)</label>
+                        <input type="number" class="form-input" id="convertFromAmount" placeholder="0.00" oninput="updateConvertRates()">
                     </div>
-                    <div class="convert-arrow">
-                        <i class="fas fa-arrow-down"></i>
+                    <div class="convert-arrow" onclick="swapConvertDirection()">
+                        <i class="fas fa-exchange-alt"></i>
                     </div>
                     <div class="form-group">
-                        <label>To</label>
-                        <select class="form-input" id="convertToCurrency">
+                        <label id="convertToLabel">To</label>
+                        <select class="form-input" id="convertToCurrency" onchange="updateConvertRates()">
                             <option value="USDT">USDT</option>
                             <option value="USDC">USDC</option>
                             <option value="BTC">BTC</option>
@@ -988,7 +1038,8 @@
                 </div>
                 
                 <div class="convert-rate-info">
-                    <i class="fas fa-info-circle"></i> Rates are updated every 60 seconds
+                    <i class="fas fa-info-circle"></i> 
+                    <span id="convertRateText">Rate: 1 PCH = $0.045 USDT</span>
                 </div>
                 
                 <button class="btn-submit" onclick="executeConvert()">Convert Now</button>
@@ -996,20 +1047,50 @@
         </div>
     </div>
 
-    <!-- Withdraw Modal -->
+    <!-- Withdraw Modal - WITH WALLET INTEGRATION -->
     <div class="modal" id="withdrawModal">
         <div class="modal-content">
             <button class="close-modal" onclick="closeWithdrawModal()"><i class="fas fa-times"></i></button>
             <div class="modal-header">
-                <h3 class="modal-title">Withdraw</h3>
-                <p class="modal-subtitle">Convert PCH to fiat (Coming Soon)</p>
+                <h3 class="modal-title">Withdraw PCH</h3>
+                <p class="modal-subtitle">Withdraw to your connected wallet</p>
             </div>
             <div class="modal-body">
-                <div class="empty-state">
-                    <i class="fas fa-tools"></i>
-                    <p>Fiat withdrawal coming soon</p>
-                    <p class="empty-sub">Currently available on partner exchanges</p>
+                <div class="wallet-status-box" id="withdrawWalletStatus">
+                    <i class="fas fa-wallet"></i>
+                    <div class="wallet-status-text">
+                        <span id="withdrawWalletText">No wallet connected</span>
+                        <button class="btn-primary btn-small" onclick="connectWalletForWithdraw()">Connect Wallet</button>
+                    </div>
                 </div>
+
+                <div class="form-group">
+                    <label>Withdrawal Amount</label>
+                    <input type="number" class="form-input" id="withdrawAmount" placeholder="0.00">
+                    <div class="input-meta">
+                        <span class="balance-display">Available: <span id="withdrawAvailableBalance">0.00</span> PCH</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Destination Address</label>
+                    <input type="text" class="form-input" id="withdrawAddress" placeholder="0x..." readonly>
+                </div>
+
+                <div class="withdraw-fee-info">
+                    <div class="fee-row">
+                        <span>Network Fee</span>
+                        <span>0.5 PCH</span>
+                    </div>
+                    <div class="fee-row total">
+                        <span>Total Deduction</span>
+                        <span id="totalDeduction">0.00 PCH</span>
+                    </div>
+                </div>
+                
+                <button class="btn-submit" id="withdrawSubmitBtn" onclick="executeWithdraw()" disabled>
+                    Connect Wallet to Withdraw
+                </button>
             </div>
         </div>
     </div>
@@ -1041,7 +1122,7 @@
         </div>
     </div>
 
-    <!-- KYC Modal -->
+    <!-- KYC Modal - WITH CAMERA -->
     <div class="modal" id="kycModal">
         <div class="modal-content" style="max-width: 500px;">
             <button class="close-modal" onclick="closeKYCModal()"><i class="fas fa-times"></i></button>
@@ -1129,8 +1210,8 @@
                     <div class="kyc-form-row">
                         <div class="form-group">
                             <label>ID Document</label>
-                            <div class="kyc-file-upload">
-                                <input type="file" id="kycIdFile" accept="image/*,.pdf">
+                            <div class="kyc-file-upload" onclick="document.getElementById('kycIdFile').click()">
+                                <input type="file" id="kycIdFile" accept="image/*,.pdf" style="display: none;" onchange="handleKYCFile(this, 'idPreview', 'idFileName')">
                                 <div class="file-upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
                                 <div class="file-upload-text" id="idFileName">Upload ID (JPG, PNG, PDF)</div>
                                 <div class="file-upload-hint">Max 5MB</div>
@@ -1139,11 +1220,11 @@
                         </div>
                         <div class="form-group">
                             <label>Selfie with ID</label>
-                            <div class="kyc-file-upload">
-                                <input type="file" id="kycSelfieFile" accept="image/*">
+                            <div class="kyc-file-upload" onclick="openCameraModal()">
+                                <input type="file" id="kycSelfieFile" accept="image/*" style="display: none;" onchange="handleKYCFile(this, 'selfiePreview', 'selfieFileName')">
                                 <div class="file-upload-icon"><i class="fas fa-camera"></i></div>
-                                <div class="file-upload-text" id="selfieFileName">Upload Selfie</div>
-                                <div class="file-upload-hint">Clear face visible</div>
+                                <div class="file-upload-text" id="selfieFileName">Take Selfie</div>
+                                <div class="file-upload-hint">Click to open camera</div>
                             </div>
                             <div class="file-preview" id="selfiePreview"></div>
                         </div>
@@ -1154,7 +1235,39 @@
                     </button>
                 </form>
                 
-                <div id="kycSubmitted" style="display: none;"></div>
+                <div id="kycSubmittedView" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Camera Modal -->
+    <div class="modal" id="cameraModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <button class="close-modal" onclick="closeCameraModal()"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <h3 class="modal-title">Take Selfie</h3>
+                <p class="modal-subtitle">Position your face clearly in the frame</p>
+            </div>
+            <div class="modal-body">
+                <div class="camera-container">
+                    <video id="cameraVideo" autoplay playsinline></video>
+                    <canvas id="cameraCanvas" style="display: none;"></canvas>
+                    <div class="camera-overlay">
+                        <div class="face-guide"></div>
+                    </div>
+                </div>
+                <div class="camera-controls">
+                    <button class="btn-primary" id="captureBtn" onclick="capturePhoto()">
+                        <i class="fas fa-camera"></i> Capture
+                    </button>
+                    <button class="btn-secondary" id="retakeBtn" onclick="retakePhoto()" style="display: none;">
+                        <i class="fas fa-redo"></i> Retake
+                    </button>
+                    <button class="btn-primary" id="confirmBtn" onclick="confirmPhoto()" style="display: none;">
+                        <i class="fas fa-check"></i> Confirm
+                    </button>
+                </div>
+                <p class="camera-hint">Make sure your face is well-lit and clearly visible</p>
             </div>
         </div>
     </div>
