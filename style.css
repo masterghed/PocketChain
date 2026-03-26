@@ -1,6 +1,6 @@
 /* ==========================================
    POCKETCHAIN - PROFESSIONAL DEFI PLATFORM
-   COMPLETE STYLES WITH ALL MODIFICATIONS
+   COMPLETE STYLES WITH PCH WALLET MODIFICATIONS
    ========================================== */
 
 /* --- CSS VARIABLES --- */
@@ -743,50 +743,138 @@ body.light-mode .card-title i {
     color: #0088cc;
 }
 
-/* --- CHAIN TOGGLE --- */
-.chain-toggle-container {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    background: var(--glass);
-    padding: 5px;
-    border-radius: 12px;
-    border: 1px solid var(--border);
-}
+/* ==========================================
+   PCH WALLET STYLES
+   ========================================== */
 
-body.light-mode .chain-toggle-container {
-    background: rgba(0,194,255,0.05);
-}
-
-.chain-toggle-btn {
-    flex: 1;
-    padding: 10px 20px;
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    font-weight: 600;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s;
+/* Wallet Security Notice */
+.wallet-security-notice {
     display: flex;
     align-items: center;
+    gap: 15px;
+    padding: 15px 20px;
+    background: linear-gradient(135deg, rgba(0,255,136,0.1), rgba(0,194,255,0.05));
+    border: 1px solid rgba(0,255,136,0.3);
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.wallet-security-notice i {
+    font-size: 1.5rem;
+    color: var(--secondary);
+}
+
+.security-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.security-text strong {
+    color: var(--secondary);
+    font-size: 0.9rem;
+    margin-bottom: 2px;
+}
+
+.security-text span {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+/* Unlock Buttons */
+.unlock-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.unlock-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 10px;
+    padding: 25px 20px;
+    background: var(--glass);
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: #fff;
 }
 
-.chain-toggle-btn.active {
-    background: var(--primary);
-    color: #000;
+body.light-mode .unlock-btn {
+    color: #1a1a2e;
 }
 
-.chain-toggle-btn:hover:not(.active) {
+.unlock-btn:hover {
+    border-color: var(--primary);
+    background: rgba(0,194,255,0.08);
+    transform: translateY(-2px);
+}
+
+.unlock-btn i {
+    font-size: 2rem;
+}
+
+.unlock-btn.passphrase i {
     color: var(--primary);
 }
 
-/* --- ASSET PAGE --- */
+.unlock-btn.fingerprint i {
+    color: var(--secondary);
+}
+
+.unlock-btn span {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* Wallet Locked State */
+.wallet-locked-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: var(--glass);
+    border: 2px dashed var(--border);
+    border-radius: 16px;
+}
+
+.locked-icon {
+    width: 80px;
+    height: 80px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+}
+
+.locked-icon i {
+    font-size: 2.5rem;
+    color: var(--text-muted);
+}
+
+.wallet-locked-state h3 {
+    font-size: 1.3rem;
+    margin-bottom: 8px;
+    color: var(--text-muted);
+}
+
+.wallet-locked-state p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* Wallet Content */
+.wallet-content.hidden {
+    display: none !important;
+}
+
+/* Asset Overview */
 .asset-overview {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 12px;
     margin-bottom: 20px;
 }
@@ -795,7 +883,7 @@ body.light-mode .chain-toggle-container {
     background: linear-gradient(135deg, rgba(0,194,255,0.08), rgba(112,0,255,0.08));
     border: 1px solid var(--border);
     border-radius: 14px;
-    padding: 15px;
+    padding: 20px;
     position: relative;
     overflow: hidden;
 }
@@ -804,9 +892,14 @@ body.light-mode .asset-card {
     background: linear-gradient(135deg, rgba(0,194,255,0.05), rgba(112,0,255,0.05));
 }
 
+.asset-card.main-balance {
+    background: linear-gradient(135deg, rgba(0,194,255,0.15), rgba(0,255,136,0.1));
+    border-color: rgba(0,194,255,0.4);
+}
+
 .asset-label { color: var(--text-muted); font-size: 0.75rem; margin-bottom: 4px; }
 .asset-value {
-    font-size: 1.4rem;
+    font-size: 1.8rem;
     font-weight: 700;
     color: #fff;
     margin-bottom: 2px;
@@ -818,6 +911,7 @@ body.light-mode .asset-value {
 
 .asset-sub { color: var(--secondary); font-size: 0.75rem; }
 
+/* Action Buttons */
 .action-buttons {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -860,7 +954,675 @@ body.light-mode .action-btn i {
 
 .action-btn span { font-weight: 600; font-size: 0.8rem; }
 
-/* --- STAKING PRO --- */
+/* ==========================================
+   FAQ STYLES
+   ========================================== */
+.faq-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.faq-item {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s;
+}
+
+body.light-mode .faq-item {
+    background: rgba(0,194,255,0.05);
+}
+
+.faq-item.active {
+    border-color: var(--primary);
+}
+
+.faq-question {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 20px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+}
+
+.faq-question:hover {
+    background: rgba(0,194,255,0.05);
+}
+
+.faq-question i {
+    color: var(--primary);
+    transition: transform 0.3s;
+}
+
+.faq-item.active .faq-question i {
+    transform: rotate(180deg);
+}
+
+.faq-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.faq-item.active .faq-answer {
+    max-height: 300px;
+}
+
+.faq-answer p {
+    padding: 0 20px 18px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+/* ==========================================
+   WHITEPAPER STYLES
+   ========================================== */
+.whitepaper-content {
+    line-height: 1.8;
+}
+
+.whitepaper-section {
+    margin-bottom: 30px;
+    padding-bottom: 25px;
+    border-bottom: 1px solid var(--border);
+}
+
+.whitepaper-section:last-of-type {
+    border-bottom: none;
+}
+
+.whitepaper-section h3 {
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+body.light-mode .whitepaper-section h3 {
+    color: #0088cc;
+}
+
+.whitepaper-section p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+}
+
+.whitepaper-section ul {
+    margin-left: 20px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.whitepaper-section li {
+    margin-bottom: 8px;
+}
+
+.whitepaper-section strong {
+    color: #fff;
+}
+
+body.light-mode .whitepaper-section strong {
+    color: #1a1a2e;
+}
+
+/* Roadmap */
+.roadmap-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.roadmap-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 20px;
+    background: var(--glass);
+    border-radius: 10px;
+    border-left: 3px solid var(--text-muted);
+}
+
+body.light-mode .roadmap-item {
+    background: rgba(0,0,0,0.05);
+}
+
+.roadmap-item.completed {
+    border-left-color: var(--secondary);
+}
+
+.roadmap-item.active {
+    border-left-color: var(--primary);
+    background: rgba(0,194,255,0.08);
+}
+
+.roadmap-quarter {
+    font-weight: 700;
+    color: var(--primary);
+    min-width: 70px;
+}
+
+.roadmap-desc {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.roadmap-item.completed .roadmap-desc {
+    color: var(--secondary);
+}
+
+.whitepaper-download {
+    margin-top: 30px;
+    text-align: center;
+}
+
+/* ==========================================
+   DEPOSIT MODAL STYLES
+   ========================================== */
+.deposit-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px;
+    background: rgba(0,194,255,0.1);
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.deposit-info i {
+    color: var(--primary);
+    font-size: 1.2rem;
+}
+
+.deposit-info p {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.deposit-networks {
+    margin: 20px 0;
+}
+
+.deposit-networks label {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-bottom: 10px;
+}
+
+.network-tags {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.network-tag {
+    padding: 8px 16px;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.network-tag.active {
+    background: var(--primary);
+    color: #000;
+    border-color: var(--primary);
+}
+
+.deposit-warning {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px;
+    background: rgba(255,165,2,0.1);
+    border: 1px solid rgba(255,165,2,0.3);
+    border-radius: 10px;
+    margin-top: 20px;
+}
+
+.deposit-warning i {
+    color: var(--warning);
+    font-size: 1.2rem;
+}
+
+.deposit-warning span {
+    color: var(--warning);
+    font-size: 0.85rem;
+}
+
+/* ==========================================
+   WITHDRAW OPTIONS MODAL
+   ========================================== */
+.withdraw-options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.withdraw-option-btn {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 20px;
+    background: var(--glass);
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: left;
+    color: #fff;
+}
+
+body.light-mode .withdraw-option-btn {
+    color: #1a1a2e;
+    background: rgba(0,194,255,0.05);
+}
+
+.withdraw-option-btn:hover {
+    border-color: var(--primary);
+    background: rgba(0,194,255,0.08);
+    transform: translateX(5px);
+}
+
+.withdraw-option-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.withdraw-option-icon.p2p {
+    background: rgba(0,255,136,0.15);
+    color: var(--secondary);
+}
+
+.withdraw-option-icon.crypto {
+    background: rgba(0,194,255,0.15);
+    color: var(--primary);
+}
+
+.withdraw-option-info {
+    flex: 1;
+}
+
+.withdraw-option-info h4 {
+    font-size: 1rem;
+    margin-bottom: 3px;
+}
+
+.withdraw-option-info p {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-bottom: 5px;
+}
+
+.withdraw-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    background: var(--glass);
+    border-radius: 10px;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+/* ==========================================
+   P2P MODAL STYLES
+   ========================================== */
+.p2p-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.p2p-tab {
+    flex: 1;
+    padding: 12px;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-muted);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.p2p-tab.active {
+    background: var(--primary);
+    color: #000;
+    border-color: var(--primary);
+}
+
+.p2p-calculator {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.p2p-rate {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-top: 10px;
+}
+
+.p2p-payment-methods {
+    margin-bottom: 20px;
+}
+
+.p2p-payment-methods label {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-bottom: 10px;
+}
+
+.payment-options {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.payment-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.payment-option.active {
+    background: rgba(0,255,136,0.15);
+    border-color: var(--secondary);
+    color: var(--secondary);
+}
+
+.p2p-notice {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px;
+    background: rgba(0,255,136,0.1);
+    border: 1px solid rgba(0,255,136,0.3);
+    border-radius: 10px;
+    margin-top: 15px;
+}
+
+.p2p-notice i {
+    color: var(--secondary);
+}
+
+.p2p-notice span {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+/* ==========================================
+   IMPROVED CONVERT MODAL
+   ========================================== */
+.convert-presets {
+    margin-bottom: 20px;
+}
+
+.convert-presets label {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-bottom: 10px;
+}
+
+.preset-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.preset-buttons button {
+    padding: 8px 14px;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.preset-buttons button:hover {
+    background: var(--primary);
+    color: #000;
+    border-color: var(--primary);
+}
+
+.convert-card {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 15px;
+}
+
+body.light-mode .convert-card {
+    background: rgba(0,194,255,0.05);
+}
+
+.convert-input-section {
+    margin-bottom: 10px;
+}
+
+.convert-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.convert-label-row label {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.convert-balance {
+    color: var(--secondary);
+    font-size: 0.75rem;
+}
+
+.convert-input-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.convert-amount-input {
+    flex: 1;
+    padding: 14px 16px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+body.light-mode .convert-amount-input {
+    background: rgba(255,255,255,0.8);
+    color: #1a1a2e;
+}
+
+.convert-amount-input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.convert-currency-select {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+body.light-mode .convert-currency-select {
+    background: rgba(255,255,255,0.8);
+}
+
+.convert-currency-select img {
+    width: 24px;
+    height: 24px;
+}
+
+.convert-currency-select span {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.convert-currency-dropdown {
+    padding: 12px 16px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: #fff;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+body.light-mode .convert-currency-dropdown {
+    background: rgba(255,255,255,0.8);
+    color: #1a1a2e;
+}
+
+.convert-swap-btn {
+    width: 44px;
+    height: 44px;
+    background: var(--primary);
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 10px auto;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: #000;
+    font-size: 1.1rem;
+}
+
+.convert-swap-btn:hover {
+    transform: rotate(180deg);
+    box-shadow: 0 0 20px rgba(0,194,255,0.4);
+}
+
+.convert-rate-card {
+    background: rgba(0,255,136,0.05);
+    border: 1px solid rgba(0,255,136,0.2);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.rate-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.rate-row.total {
+    border-top: 1px solid rgba(0,255,136,0.2);
+    margin-top: 8px;
+    padding-top: 12px;
+    font-weight: 700;
+    color: var(--secondary);
+}
+
+.convert-btn {
+    font-size: 1rem;
+}
+
+/* ==========================================
+   PASSPHRASE MODAL
+   ========================================== */
+.wallet-security-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px;
+    background: rgba(0,255,136,0.1);
+    border: 1px solid rgba(0,255,136,0.3);
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.wallet-security-info i {
+    color: var(--secondary);
+    font-size: 1.3rem;
+}
+
+.wallet-security-info p {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+/* ==========================================
+   LEADERBOARD PLACEHOLDER
+   ========================================== */
+.leaderboard-placeholder {
+    text-align: center;
+    padding: 40px 20px;
+    background: var(--glass);
+    border: 2px dashed var(--border);
+    border-radius: 16px;
+}
+
+.leaderboard-placeholder i {
+    font-size: 3rem;
+    color: var(--warning);
+    margin-bottom: 15px;
+}
+
+.leaderboard-placeholder p {
+    color: var(--text-muted);
+    font-size: 1rem;
+    margin-bottom: 5px;
+}
+
+.leaderboard-placeholder span {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+/* ==========================================
+   STAKING PRO
+   ========================================== */
 .staking-pro {
     display: grid;
     grid-template-columns: 1fr;
@@ -1747,86 +2509,6 @@ body.light-mode .file-preview {
     object-fit: cover;
 }
 
-/* --- CONVERT MODAL --- */
-.convert-direction-toggle {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    background: var(--glass);
-    padding: 5px;
-    border-radius: 10px;
-}
-
-.direction-btn {
-    flex: 1;
-    padding: 10px;
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    font-weight: 600;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.direction-btn.active {
-    background: var(--primary);
-    color: #000;
-}
-
-.convert-box {
-    background: var(--glass);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 15px;
-}
-
-body.light-mode .convert-box {
-    background: rgba(0,194,255,0.05);
-}
-
-.convert-arrow {
-    text-align: center;
-    margin: 10px 0;
-    color: var(--primary);
-    font-size: 1.5rem;
-    cursor: pointer;
-    transition: transform 0.3s;
-}
-
-.convert-arrow:hover {
-    transform: rotate(180deg);
-}
-
-.convert-result {
-    background: rgba(0,255,136,0.1);
-    border: 1px solid rgba(0,255,136,0.3);
-    border-radius: 10px;
-    padding: 15px;
-    text-align: center;
-    margin-bottom: 15px;
-}
-
-.convert-result-label {
-    color: var(--text-muted);
-    font-size: 0.8rem;
-    margin-bottom: 5px;
-}
-
-.convert-result-value {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--secondary);
-}
-
-.convert-rate-info {
-    text-align: center;
-    color: var(--text-muted);
-    font-size: 0.75rem;
-    margin-bottom: 15px;
-}
-
 /* --- WITHDRAW MODAL --- */
 .wallet-status-box {
     display: flex;
@@ -2431,7 +3113,7 @@ body.light-mode ::-webkit-scrollbar-thumb { border-color: #f0f4f8; }
     }
     
     .asset-overview { 
-        grid-template-columns: repeat(4, 1fr); 
+        grid-template-columns: repeat(2, 1fr); 
         gap: 12px;
     }
     
@@ -2443,6 +3125,10 @@ body.light-mode ::-webkit-scrollbar-thumb { border-color: #f0f4f8; }
     .tokenomics-grid { 
         grid-template-columns: repeat(3, 1fr); 
         gap: 12px;
+    }
+    
+    .unlock-buttons {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
@@ -2467,7 +3153,7 @@ body.light-mode ::-webkit-scrollbar-thumb { border-color: #f0f4f8; }
     
     .mission-grid { grid-template-columns: 1fr; gap: 10px; }
     
-    .asset-overview { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .asset-overview { grid-template-columns: 1fr; gap: 8px; }
     
     .action-buttons { grid-template-columns: repeat(2, 1fr); gap: 8px; }
     
@@ -2494,11 +3180,18 @@ body.light-mode ::-webkit-scrollbar-thumb { border-color: #f0f4f8; }
     .attendance-info { grid-template-columns: 1fr; }
     .date-row { grid-template-columns: 1fr; }
     
-    .chain-toggle-container { flex-direction: column; }
     .leaderboard-tabs { flex-direction: column; }
     .leaderboard-tab { width: 100%; }
     .camera-container { height: 250px; }
     .face-guide { width: 150px; height: 200px; }
+    
+    .unlock-buttons { grid-template-columns: 1fr; }
+    
+    .payment-options { flex-direction: column; }
+    .payment-option { width: 100%; }
+    
+    .preset-buttons { flex-wrap: wrap; }
+    .preset-buttons button { flex: 1; min-width: 70px; }
 }
 
 @media (max-width: 380px) {
@@ -2512,4 +3205,9 @@ body.light-mode ::-webkit-scrollbar-thumb { border-color: #f0f4f8; }
     .earn-grid { grid-template-columns: 1fr; gap: 10px; }
     
     .action-buttons { grid-template-columns: repeat(2, 1fr); }
+    
+    .convert-input-row { flex-direction: column; }
+    .convert-input-row .convert-amount-input,
+    .convert-input-row .convert-currency-select,
+    .convert-input-row .convert-currency-dropdown { width: 100%; }
 }
