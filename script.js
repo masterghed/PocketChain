@@ -1,6 +1,6 @@
 // ==========================================
 // POCKETCHAIN - COMPLETE JAVASCRIPT
-// WITH ALL MODIFICATIONS
+// WITH ALL MODIFICATIONS - PCH WALLET EDITION
 // ==========================================
 
 // --- STATE MANAGEMENT ---
@@ -13,8 +13,8 @@ let selectedPool = null;
 let selectedAPY = 0;
 let selectedPeriod = 0;
 let isDarkMode = localStorage.getItem('pocketchain_darkmode') !== 'false';
-let currentChain = 'onchain';
 let convertDirection = 'pchToCrypto';
+let walletUnlocked = false;
 
 // Data Storage with User Isolation
 function getUserStorageKey(key) {
@@ -26,11 +26,11 @@ function getUserStorageKey(key) {
 function initUserData() {
     if (!currentUser) return;
     
-    const keys = ['onchain_balance', 'offchain_balance', 'stakes', 'tasks', 'transactions', 'attendance', 'referrals'];
+    const keys = ['balance', 'stakes', 'tasks', 'transactions', 'attendance', 'referrals'];
     keys.forEach(key => {
         const userKey = getUserStorageKey(key);
         if (localStorage.getItem(userKey) === null) {
-            localStorage.setItem(userKey, JSON.stringify(key === 'onchain_balance' || key === 'offchain_balance' ? 10000 : []));
+            localStorage.setItem(userKey, JSON.stringify(key === 'balance' ? 10000 : []));
         }
     });
 }
@@ -39,7 +39,7 @@ function initUserData() {
 function getUserData(key) {
     const userKey = getUserStorageKey(key);
     const data = localStorage.getItem(userKey);
-    return data ? JSON.parse(data) : (key.includes('balance') ? 10000 : []);
+    return data ? JSON.parse(data) : (key === 'balance' ? 10000 : []);
 }
 
 // Set user-specific data
@@ -74,6 +74,9 @@ const CONVERSION_RATES = {
     POL: 0.08
 };
 
+// P2P Rate (PHP to PCH)
+const P2P_RATE = 2.50; // 1 PCH = 2.50 PHP
+
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🔷 PocketChain Platform Loading...');
@@ -91,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (currentUser) {
         initUserData();
-        loadChainData();
+        loadWalletData();
     }
     
     const menu = document.getElementById('sideMenu');
@@ -222,43 +225,273 @@ function initDateSync() {
     yearSelect.addEventListener('change', calculateAge);
 }
 
-// --- CHAIN TOGGLE SYSTEM ---
-function switchChain(chain) {
-    currentChain = chain;
-    
-    document.getElementById('onchainBtn').classList.toggle('active', chain === 'onchain');
-    document.getElementById('offchainBtn').classList.toggle('active', chain === 'offchain');
-    
-    loadChainData();
-    showToast('Switched', `Now viewing ${chain} assets`);
-}
-
-function loadChainData() {
+// --- PCH WALLET FUNCTIONS ---
+function loadWalletData() {
     if (!currentUser) return;
     
-    const balance = getUserData(`${currentChain}_balance`);
-    document.getElementById('availableBalance').textContent = balance.toFixed(2) + ' PCH';
-    updateTotalBalance();
+    const balance = getUserData('balance');
+    const balanceEl = document.getElementById('availableBalance');
+    const balanceUsdEl = document.getElementById('balanceUsd');
+    
+    if (balanceEl) balanceEl.textContent = balance.toFixed(2) + ' PCH';
+    if (balanceUsdEl) balanceUsdEl.textContent = '≈ $' + (balance * TOKEN_CONFIG.price).toFixed(2) + ' USD';
+    
+    // Update convert balance
+    const convertBalance = document.getElementById('convertFromBalance');
+    if (convertBalance) convertBalance.textContent = balance.toFixed(2);
+    
     updateTransactionHistory();
 }
 
-function updateTotalBalance() {
-    if (!currentUser) return;
+function unlockWithPassphrase() {
+    const modal = document.getElementById('passphraseModal');
+    if (modal) modal.classList.add('active');
+}
+
+function closePassphraseModal() {
+    const modal = document.getElementById('passphraseModal');
+    if (modal) modal.classList.remove('active');
+}
+
+function confirmPassphraseUnlock() {
+    const passphrase = document.getElementById('walletPassphrase').value.trim();
     
-    const onchain = getUserData('onchain_balance');
-    const offchain = getUserData('offchain_balance');
-    const stakes = getUserData('stakes');
-    const staked = stakes.filter(s => !s.claimed).reduce((sum, s) => sum + s.amount, 0);
-    const rewards = stakes.filter(s => !s.claimed).reduce((sum, s) => sum + s.earnings, 0);
+    if (!passphrase || passphrase.length < 10) {
+        showToast('Error', 'Please enter a valid passphrase', 'error');
+        return;
+    }
     
-    const total = onchain + offchain + staked + rewards;
-    document.getElementById('totalBalance').textContent = total.toFixed(2) + ' PCH';
-    document.getElementById('stakedBalance').textContent = staked.toFixed(2) + ' PCH';
-    document.getElementById('rewardsBalance').textContent = rewards.toFixed(2) + ' PCH';
+    // Simulate passphrase validation
+    walletUnlocked = true;
+    closePassphraseModal();
+    showWalletContent();
+    showToast('Wallet Unlocked', 'Your PCH Wallet is now accessible', 'success');
     
-    const rate = TOKEN_CONFIG.price;
-    const assetSub = document.querySelector('.asset-sub');
-    if (assetSub) assetSub.textContent = `≈ $${(total * rate).toFixed(2)} USD`;
+    // Clear passphrase input
+    document.getElementById('walletPassphrase').value = '';
+}
+
+function unlockWithFingerprint() {
+    // Simulate biometric authentication
+    if (navigator.credentials && window.PublicKeyCredential) {
+        showToast('Authenticating', 'Please verify your fingerprint...');
+        
+        setTimeout(() => {
+            walletUnlocked = true;
+            showWalletContent();
+            showToast('Wallet Unlocked', 'Biometric authentication successful', 'success');
+        }, 1500);
+    } else {
+        // Fallback for browsers without WebAuthn
+        showToast('Fingerprint', 'Fingerprint sensor simulated for demo', 'success');
+        setTimeout(() => {
+            walletUnlocked = true;
+            showWalletContent();
+            showToast('Wallet Unlocked', 'Your PCH Wallet is now accessible', 'success');
+        }, 1000);
+    }
+}
+
+function showWalletContent() {
+    const unlockButtons = document.getElementById('unlockButtons');
+    const walletContent = document.getElementById('walletContent');
+    const lockedState = document.getElementById('walletLockedState');
+    
+    if (unlockButtons) unlockButtons.classList.add('hidden');
+    if (lockedState) lockedState.classList.add('hidden');
+    if (walletContent) walletContent.classList.remove('hidden');
+    
+    loadWalletData();
+}
+
+function lockWallet() {
+    walletUnlocked = false;
+    const unlockButtons = document.getElementById('unlockButtons');
+    const walletContent = document.getElementById('walletContent');
+    const lockedState = document.getElementById('walletLockedState');
+    
+    if (unlockButtons) unlockButtons.classList.remove('hidden');
+    if (lockedState) lockedState.classList.remove('hidden');
+    if (walletContent) walletContent.classList.add('hidden');
+}
+
+// --- DEPOSIT FUNCTIONS ---
+function openDepositModal() {
+    if (!walletUnlocked) {
+        showToast('Wallet Locked', 'Please unlock your wallet first', 'error');
+        return;
+    }
+    
+    const modal = document.getElementById('depositModal');
+    if (modal) {
+        modal.classList.add('active');
+        
+        // Generate wallet address
+        const address = generateWalletAddress();
+        document.getElementById('depositAddress').value = address;
+        document.getElementById('depositQR').textContent = address.substring(0, 20) + '...';
+    }
+}
+
+function closeDepositModal() {
+    const modal = document.getElementById('depositModal');
+    if (modal) modal.classList.remove('active');
+}
+
+function generateWalletAddress() {
+    if (!currentUser) return 'Not connected';
+    const hash = (currentUser.id * 9999).toString(16).substring(0, 12);
+    return `0x${hash}...PCH${currentUser.id}`;
+}
+
+function copyDepositAddress() {
+    const address = document.getElementById('depositAddress').value;
+    navigator.clipboard.writeText(address).then(() => {
+        showToast('Copied', 'Wallet address copied to clipboard');
+    });
+}
+
+// --- WITHDRAW OPTIONS ---
+function openWithdrawOptionsModal() {
+    if (!walletUnlocked) {
+        showToast('Wallet Locked', 'Please unlock your wallet first', 'error');
+        return;
+    }
+    
+    const modal = document.getElementById('withdrawOptionsModal');
+    if (modal) modal.classList.add('active');
+}
+
+function closeWithdrawOptionsModal() {
+    const modal = document.getElementById('withdrawOptionsModal');
+    if (modal) modal.classList.remove('active');
+}
+
+// --- P2P FUNCTIONS ---
+function openP2PModal() {
+    closeWithdrawOptionsModal();
+    const modal = document.getElementById('p2pModal');
+    if (modal) {
+        modal.classList.add('active');
+        calculateP2P();
+    }
+}
+
+function closeP2PModal() {
+    const modal = document.getElementById('p2pModal');
+    if (modal) modal.classList.remove('active');
+}
+
+function switchP2PTab(tab) {
+    document.querySelectorAll('.p2p-tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    calculateP2P();
+}
+
+function calculateP2P() {
+    const phpAmount = parseFloat(document.getElementById('p2pPhpAmount').value) || 0;
+    const pchAmount = phpAmount / P2P_RATE;
+    document.getElementById('p2pPchAmount').value = pchAmount.toFixed(2);
+}
+
+function executeP2POrder() {
+    const phpAmount = parseFloat(document.getElementById('p2pPhpAmount').value);
+    const pchAmount = parseFloat(document.getElementById('p2pPchAmount').value);
+    
+    if (!phpAmount || phpAmount <= 0) {
+        showToast('Error', 'Enter a valid amount', 'error');
+        return;
+    }
+    
+    showToast('Order Created', `P2P order for ${pchAmount.toFixed(2)} PCH created successfully`, 'success');
+    closeP2PModal();
+    
+    // Record transaction
+    recordTransaction('P2P Buy', pchAmount, 'Pending');
+}
+
+// --- WITHDRAW CRYPTO FUNCTIONS ---
+function openWithdrawCryptoModal() {
+    closeWithdrawOptionsModal();
+    const modal = document.getElementById('withdrawCryptoModal');
+    if (modal) {
+        modal.classList.add('active');
+        updateWithdrawWalletStatus();
+        
+        const balance = getUserData('balance');
+        document.getElementById('withdrawAvailableBalance').textContent = balance.toFixed(2);
+        
+        document.getElementById('withdrawAmount').oninput = function() {
+            const amt = parseFloat(this.value) || 0;
+            document.getElementById('totalDeduction').textContent = (amt + 0.5).toFixed(2) + ' PCH';
+        };
+    }
+}
+
+function closeWithdrawCryptoModal() {
+    const modal = document.getElementById('withdrawCryptoModal');
+    if (modal) modal.classList.remove('active');
+}
+
+function updateWithdrawWalletStatus() {
+    const statusBox = document.getElementById('withdrawWalletStatus');
+    const submitBtn = document.getElementById('withdrawSubmitBtn');
+    const addressInput = document.getElementById('withdrawAddress');
+    
+    if (walletConnected && walletAddress) {
+        statusBox.innerHTML = `<i class="fas fa-check-circle" style="color: var(--secondary);"></i>
+            <div class="wallet-status-text">
+                <span>Connected: ${walletAddress.substring(0, 6)}...${walletAddress.substring(38)}</span>
+                <button class="btn-secondary btn-small" onclick="disconnectWalletForWithdraw()">Disconnect</button>
+            </div>`;
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Withdraw Now';
+        addressInput.value = walletAddress;
+    } else {
+        statusBox.innerHTML = `<i class="fas fa-wallet"></i>
+            <div class="wallet-status-text">
+                <span>No wallet connected</span>
+                <button class="btn-primary btn-small" onclick="connectWalletForWithdraw()">Connect Wallet</button>
+            </div>`;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Connect Wallet to Withdraw';
+        addressInput.value = '';
+    }
+}
+
+function connectWalletForWithdraw() {
+    openWalletModal();
+    window.onWalletConnected = function() {
+        updateWithdrawWalletStatus();
+    };
+}
+
+function disconnectWalletForWithdraw() {
+    disconnectWallet();
+    updateWithdrawWalletStatus();
+}
+
+function executeWithdraw() {
+    const amount = parseFloat(document.getElementById('withdrawAmount').value);
+    
+    if (!amount || amount <= 0) {
+        showToast('Error', 'Enter valid amount', 'error');
+        return;
+    }
+    
+    const balance = getUserData('balance');
+    
+    if (amount + 0.5 > balance) {
+        showToast('Error', 'Insufficient balance (including fee)', 'error');
+        return;
+    }
+    
+    setUserData('balance', balance - amount - 0.5);
+    recordTransaction('Withdraw', -(amount + 0.5), 'Completed');
+    
+    loadWalletData();
+    closeWithdrawCryptoModal();
+    showToast('Withdrawal Initiated', `${amount} PCH sent to your wallet`);
 }
 
 // --- REFERRAL SYSTEM ---
@@ -414,14 +647,14 @@ function claimDailyReward() {
         showToast('Streak Bonus!', `7-day streak! +${bonus} PCH bonus!`, 'success');
     }
     
-    const balance = getUserData(`${currentChain}_balance`);
-    setUserData(`${currentChain}_balance`, balance + reward);
+    const balance = getUserData('balance');
+    setUserData('balance', balance + reward);
     
     recordTransaction('Daily Claim', reward, 'Completed');
     
     updateAttendanceUI();
     checkDailyAttendance();
-    loadChainData();
+    loadWalletData();
     
     const bonusMsg = bonus > 0 ? ` (+${bonus} bonus)` : '';
     showToast('Claimed!', `+${reward} PCH${bonusMsg}`, 'success');
@@ -501,19 +734,17 @@ function disconnectWallet(silent = false) {
     if (!silent) showToast('Disconnected', 'Wallet disconnected');
 }
 
-// --- SEND/RECEIVE ---
+// --- SEND FUNCTIONS ---
 function openSendModal() {
-    if (!currentUser) {
-        showToast('Error', 'Please login first', 'error');
+    if (!walletUnlocked) {
+        showToast('Wallet Locked', 'Please unlock your wallet first', 'error');
         return;
     }
     
     const modal = document.getElementById('sendModal');
     if (modal) {
         modal.classList.add('active');
-        document.getElementById('sendChainBadge').textContent = currentChain === 'onchain' ? 'Onchain' : 'Offchain';
-        
-        const balance = getUserData(`${currentChain}_balance`);
+        const balance = getUserData('balance');
         document.getElementById('sendAvailableBalance').textContent = balance.toFixed(2);
     }
 }
@@ -535,62 +766,24 @@ function executeSend() {
         return;
     }
     
-    const balance = getUserData(`${currentChain}_balance`);
+    const balance = getUserData('balance');
     if (amount > balance) {
         showToast('Error', 'Insufficient balance', 'error');
         return;
     }
     
-    setUserData(`${currentChain}_balance`, balance - amount);
-    recordTransaction(`Send (${currentChain})`, -amount, 'Completed');
+    setUserData('balance', balance - amount);
+    recordTransaction('Send', -amount, 'Completed');
     
-    loadChainData();
+    loadWalletData();
     closeSendModal();
-    showToast('Success', `Sent ${amount} PCH on ${currentChain}`);
+    showToast('Success', `Sent ${amount} PCH`);
 }
 
-function openReceiveModal() {
-    if (!currentUser) {
-        showToast('Error', 'Please login first', 'error');
-        return;
-    }
-    
-    const modal = document.getElementById('receiveModal');
-    if (modal) {
-        modal.classList.add('active');
-        document.getElementById('receiveChainBadge').textContent = currentChain === 'onchain' ? 'Onchain' : 'Offchain';
-        
-        const address = generateUserAddress();
-        document.getElementById('receiveAddress').value = address;
-        document.getElementById('receiveQR').textContent = address.substring(0, 20) + '...';
-    }
-}
-
-function closeReceiveModal() {
-    const modal = document.getElementById('receiveModal');
-    if (modal) modal.classList.remove('active');
-}
-
-function generateUserAddress() {
-    if (!currentUser) return 'Not connected';
-    const base = currentChain === 'onchain' ? '0x' : 'off';
-    const hash = (currentUser.id * 9999).toString(16).substring(0, 8);
-    return `${base}${hash}...${currentUser.email.substring(0, 4)}`;
-}
-
-function copyAddress() {
-    const address = document.getElementById('receiveAddress').value;
-    if (!address || address === 'Not connected') return;
-    
-    navigator.clipboard.writeText(address).then(() => {
-        showToast('Copied', 'Address copied to clipboard');
-    });
-}
-
-// --- BIDIRECTIONAL CONVERT ---
+// --- CONVERT FUNCTIONS (IMPROVED) ---
 function openConvertModal() {
-    if (!currentUser) {
-        showToast('Error', 'Please login first', 'error');
+    if (!walletUnlocked) {
+        showToast('Wallet Locked', 'Please unlock your wallet first', 'error');
         return;
     }
     
@@ -598,6 +791,11 @@ function openConvertModal() {
     if (modal) {
         modal.classList.add('active');
         updateConvertRates();
+        
+        // Update balance display
+        const balance = getUserData('balance');
+        const convertBalance = document.getElementById('convertFromBalance');
+        if (convertBalance) convertBalance.textContent = balance.toFixed(2);
     }
 }
 
@@ -606,28 +804,9 @@ function closeConvertModal() {
     if (modal) modal.classList.remove('active');
 }
 
-function setConvertDirection(direction) {
-    convertDirection = direction;
-    
-    document.getElementById('pchToCryptoBtn').classList.toggle('active', direction === 'pchToCrypto');
-    document.getElementById('cryptoToPchBtn').classList.toggle('active', direction === 'cryptoToPch');
-    
-    const fromLabel = document.getElementById('convertFromLabel');
-    const toLabel = document.getElementById('convertToLabel');
-    
-    if (direction === 'pchToCrypto') {
-        fromLabel.textContent = 'From (PCH)';
-        toLabel.textContent = 'To';
-    } else {
-        fromLabel.textContent = 'From';
-        toLabel.textContent = 'To (PCH)';
-    }
-    
+function setConvertAmount(amount) {
+    document.getElementById('convertFromAmount').value = amount;
     updateConvertRates();
-}
-
-function swapConvertDirection() {
-    setConvertDirection(convertDirection === 'pchToCrypto' ? 'cryptoToPch' : 'pchToCrypto');
 }
 
 function updateConvertRates() {
@@ -635,22 +814,25 @@ function updateConvertRates() {
     const currency = document.getElementById('convertToCurrency').value;
     
     if (amount <= 0) {
-        document.getElementById('convertToAmount').textContent = '0.00';
+        document.getElementById('convertToAmount').value = '';
+        document.getElementById('convertReceiveAmount').textContent = '0.00 ' + currency;
         return;
     }
     
     const rate = CONVERSION_RATES[currency];
-    let result;
+    const result = (amount * rate).toFixed(currency === 'BTC' || currency === 'ETH' ? 8 : 2);
     
-    if (convertDirection === 'pchToCrypto') {
-        result = (amount * rate).toFixed(currency === 'BTC' || currency === 'ETH' ? 8 : 2);
-        document.getElementById('convertRateText').textContent = `Rate: 1 PCH = ${rate} ${currency}`;
-    } else {
-        result = (amount / rate).toFixed(2);
-        document.getElementById('convertRateText').textContent = `Rate: 1 ${currency} = ${(1/rate).toFixed(2)} PCH`;
-    }
-    
-    document.getElementById('convertToAmount').textContent = result + ' ' + (convertDirection === 'pchToCrypto' ? currency : 'PCH');
+    document.getElementById('convertToAmount').value = result;
+    document.getElementById('convertRateText').textContent = `1 PCH = ${rate} ${currency}`;
+    document.getElementById('convertReceiveAmount').textContent = result + ' ' + currency;
+}
+
+function swapConvertDirection() {
+    // For simplicity, we just clear and let user re-enter
+    document.getElementById('convertFromAmount').value = '';
+    document.getElementById('convertToAmount').value = '';
+    document.getElementById('convertReceiveAmount').textContent = '0.00 USDT';
+    showToast('Direction Swapped', 'Enter amount to convert');
 }
 
 function executeConvert() {
@@ -662,126 +844,34 @@ function executeConvert() {
         return;
     }
     
-    const balance = getUserData(`${currentChain}_balance`);
+    const balance = getUserData('balance');
     
-    if (convertDirection === 'pchToCrypto') {
-        if (amount > balance) {
-            showToast('Error', 'Insufficient PCH balance', 'error');
-            return;
-        }
-        
-        setUserData(`${currentChain}_balance`, balance - amount);
-        const rate = CONVERSION_RATES[currency];
-        const received = (amount * rate).toFixed(currency === 'BTC' || currency === 'ETH' ? 8 : 2);
-        
-        recordTransaction(`Convert PCH→${currency}`, -amount, 'Completed');
-        showToast('Converted!', `${amount} PCH → ${received} ${currency}`);
-    } else {
-        const rate = CONVERSION_RATES[currency];
-        const pchReceived = (amount / rate);
-        
-        setUserData(`${currentChain}_balance`, balance + pchReceived);
-        recordTransaction(`Convert ${currency}→PCH`, pchReceived, 'Completed');
-        showToast('Converted!', `${amount} ${currency} → ${pchReceived.toFixed(2)} PCH`);
-    }
-    
-    loadChainData();
-    closeConvertModal();
-    document.getElementById('convertFromAmount').value = '';
-    document.getElementById('convertToAmount').textContent = '0.00';
-}
-
-// --- WITHDRAW WITH WALLET INTEGRATION ---
-function openWithdrawModal() {
-    if (!currentUser) {
-        showToast('Error', 'Please login first', 'error');
-        return;
-    }
-    
-    const modal = document.getElementById('withdrawModal');
-    if (modal) {
-        modal.classList.add('active');
-        updateWithdrawWalletStatus();
-        
-        const balance = getUserData(`${currentChain}_balance`);
-        document.getElementById('withdrawAvailableBalance').textContent = balance.toFixed(2);
-        
-        document.getElementById('withdrawAmount').oninput = function() {
-            const amt = parseFloat(this.value) || 0;
-            document.getElementById('totalDeduction').textContent = (amt + 0.5).toFixed(2) + ' PCH';
-        };
-    }
-}
-
-function closeWithdrawModal() {
-    const modal = document.getElementById('withdrawModal');
-    if (modal) modal.classList.remove('active');
-}
-
-function updateWithdrawWalletStatus() {
-    const statusBox = document.getElementById('withdrawWalletStatus');
-    const submitBtn = document.getElementById('withdrawSubmitBtn');
-    const addressInput = document.getElementById('withdrawAddress');
-    
-    if (walletConnected && walletAddress) {
-        statusBox.innerHTML = `<i class="fas fa-check-circle" style="color: var(--secondary);"></i>
-            <div class="wallet-status-text">
-                <span>Connected: ${walletAddress.substring(0, 6)}...${walletAddress.substring(38)}</span>
-                <button class="btn-secondary btn-small" onclick="disconnectWalletForWithdraw()">Disconnect</button>
-            </div>`;
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Withdraw Now';
-        addressInput.value = walletAddress;
-    } else {
-        statusBox.innerHTML = `<i class="fas fa-wallet"></i>
-            <div class="wallet-status-text">
-                <span>No wallet connected</span>
-                <button class="btn-primary btn-small" onclick="connectWalletForWithdraw()">Connect Wallet</button>
-            </div>`;
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Connect Wallet to Withdraw';
-        addressInput.value = '';
-    }
-}
-
-function connectWalletForWithdraw() {
-    openWalletModal();
-    window.onWalletConnected = function() {
-        updateWithdrawWalletStatus();
-    };
-}
-
-function disconnectWalletForWithdraw() {
-    disconnectWallet();
-    updateWithdrawWalletStatus();
-}
-
-function executeWithdraw() {
-    const amount = parseFloat(document.getElementById('withdrawAmount').value);
-    
-    if (!amount || amount <= 0) {
-        showToast('Error', 'Enter valid amount', 'error');
-        return;
-    }
-    
-    const balance = getUserData(`${currentChain}_balance`);
-    
-    if (amount + 0.5 > balance) {
+    if (amount + 0.1 > balance) {
         showToast('Error', 'Insufficient balance (including fee)', 'error');
         return;
     }
     
-    setUserData(`${currentChain}_balance`, balance - amount - 0.5);
-    recordTransaction(`Withdraw to Wallet`, -(amount + 0.5), 'Completed');
+    setUserData('balance', balance - amount - 0.1);
+    const rate = CONVERSION_RATES[currency];
+    const received = (amount * rate).toFixed(currency === 'BTC' || currency === 'ETH' ? 8 : 2);
     
-    loadChainData();
-    closeWithdrawModal();
-    showToast('Withdrawal Initiated', `${amount} PCH sent to your wallet`);
+    recordTransaction(`Convert PCH→${currency}`, -amount, 'Completed');
+    showToast('Converted!', `${amount} PCH → ${received} ${currency}`);
+    
+    loadWalletData();
+    closeConvertModal();
+    document.getElementById('convertFromAmount').value = '';
+    document.getElementById('convertToAmount').value = '';
 }
 
 // --- STAKING PRO ---
 function updateStakingPage() {
     updateActivePositions();
+    
+    // Update balance display
+    const balance = getUserData('balance');
+    const stakeBalanceDisplay = document.getElementById('stakeBalanceDisplay');
+    if (stakeBalanceDisplay) stakeBalanceDisplay.textContent = balance.toFixed(2);
 }
 
 function selectPool(element, period, apy) {
@@ -807,7 +897,7 @@ function setMaxStake() {
         return;
     }
     
-    const balance = getUserData(`${currentChain}_balance`);
+    const balance = getUserData('balance');
     const input = document.getElementById('stakeAmountPro');
     if (input) {
         input.value = balance.toFixed(2);
@@ -836,7 +926,7 @@ function calculateProEarnings() {
         if (earnPreview) earnPreview.style.display = 'block';
         
         if (errorEl) {
-            const balance = getUserData(`${currentChain}_balance`);
+            const balance = getUserData('balance');
             if (amount > balance) {
                 errorEl.classList.add('show');
             } else {
@@ -868,7 +958,7 @@ function stakePro() {
         return;
     }
     
-    const balance = getUserData(`${currentChain}_balance`);
+    const balance = getUserData('balance');
     if (amount > balance) {
         showToast('Error', 'Insufficient balance', 'error');
         return;
@@ -880,7 +970,7 @@ function stakePro() {
         return;
     }
     
-    setUserData(`${currentChain}_balance`, balance - amount);
+    setUserData('balance', balance - amount);
     
     const earnings = amount * (selectedAPY / 100) * (selectedPeriod / 365);
     const stakes = getUserData('stakes');
@@ -919,7 +1009,7 @@ function stakePro() {
     if (errorEl) errorEl.classList.remove('show');
     
     updateActivePositions();
-    updateTotalBalance();
+    loadWalletData();
     showToast('Success', `Staked ${amount} PCH at ${selectedAPY}% APY`);
 }
 
@@ -980,8 +1070,8 @@ function claimStake(stakeId) {
     if (stake.claimed) return;
     
     const totalReturn = stake.amount + stake.earnings;
-    const balance = getUserData(`${currentChain}_balance`);
-    setUserData(`${currentChain}_balance`, balance + totalReturn);
+    const balance = getUserData('balance');
+    setUserData('balance', balance + totalReturn);
     
     stakes[idx].claimed = true;
     setUserData('stakes', stakes);
@@ -989,7 +1079,7 @@ function claimStake(stakeId) {
     recordTransaction('Claim', totalReturn, 'Completed');
     
     updateActivePositions();
-    updateTotalBalance();
+    loadWalletData();
     showToast('Claimed!', `Received ${totalReturn.toFixed(2)} PCH`);
 }
 
@@ -1010,58 +1100,33 @@ function updateAirdropPage() {
     
     updateAttendanceUI();
     updateReferralUI();
-    loadLeaderboard('earners');
+    
+    // Leaderboard is now in placeholder mode
+    const leaderboardList = document.getElementById('leaderboardList');
+    const leaderboardPlaceholder = document.getElementById('leaderboardPlaceholder');
+    
+    if (leaderboardList) leaderboardList.style.display = 'none';
+    if (leaderboardPlaceholder) leaderboardPlaceholder.style.display = 'block';
 }
 
 function switchLeaderboard(type) {
     document.querySelectorAll('.leaderboard-tab').forEach(tab => tab.classList.remove('active'));
     event.target.classList.add('active');
-    loadLeaderboard(type);
+    // Leaderboard is in placeholder mode
+    showToast('Coming Soon', 'Leaderboard will be available soon');
 }
 
 function loadLeaderboard(type) {
-    const list = document.getElementById('leaderboardList');
-    if (!list) return;
-    
-    let data = [
-        { name: 'Alex M.', email: 'alex@email.com', amount: type === 'earners' ? 1250 : 45 },
-        { name: 'Sarah K.', email: 'sarah@email.com', amount: type === 'earners' ? 980 : 38 },
-        { name: 'Mike R.', email: 'mike@email.com', amount: type === 'earners' ? 875 : 32 },
-        { name: 'Emma L.', email: 'emma@email.com', amount: type === 'earners' ? 720 : 28 },
-        { name: 'John D.', email: 'john@email.com', amount: type === 'earners' ? 650 : 22 }
-    ];
-    
-    if (currentUser) {
-        const userEntry = data.find(d => d.email === currentUser.email);
-        if (!userEntry) {
-            const tasks = getUserData('tasks');
-            const referrals = getUserData('referrals');
-            data.push({
-                name: `${currentUser.firstName} ${currentUser.lastName}`,
-                email: currentUser.email,
-                amount: type === 'earners' ? (tasks.length * 10) : (referrals.invited?.length || 0)
-            });
-        }
-    }
-    
-    data.sort((a, b) => b.amount - a.amount);
-    
-    list.innerHTML = data.map((entry, index) => {
-        const rankClass = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : 'normal';
-        const isCurrentUser = currentUser && entry.email === currentUser.email;
-        
-        return `
-            <div class="leaderboard-item ${isCurrentUser ? 'current-user' : ''}">
-                <div class="leaderboard-rank ${rankClass}">${index + 1}</div>
-                <div class="leaderboard-avatar">${entry.name.charAt(0)}</div>
-                <div class="leaderboard-info">
-                    <div class="leaderboard-name">${entry.name} ${isCurrentUser ? '(You)' : ''}</div>
-                    <div class="leaderboard-email">${entry.email}</div>
-                </div>
-                <div class="leaderboard-amount">${entry.amount} ${type === 'earners' ? 'PCH' : 'refs'}</div>
+    // Leaderboard is now in placeholder mode - no actual data loaded
+    const leaderboardList = document.getElementById('leaderboardList');
+    if (leaderboardList) {
+        leaderboardList.innerHTML = `
+            <div class="leaderboard-placeholder-item">
+                <i class="fas fa-trophy"></i>
+                <p>Leaderboard data will be available soon</p>
             </div>
         `;
-    }).join('');
+    }
 }
 
 function completeTask(task) {
@@ -1091,15 +1156,31 @@ function completeTask(task) {
         tasks.push(task);
         setUserData('tasks', tasks);
         
-        const balance = getUserData(`${currentChain}_balance`);
-        setUserData(`${currentChain}_balance`, balance + 10);
+        const balance = getUserData('balance');
+        setUserData('balance', balance + 10);
         
         recordTransaction('Airdrop', 10, 'Completed');
         
         updateAirdropPage();
-        loadChainData();
+        loadWalletData();
         showToast('Reward Claimed!', '+10 PCH added to your balance');
     }, 2000);
+}
+
+// --- FAQ FUNCTIONS ---
+function toggleFaq(element) {
+    const faqItem = element.parentElement;
+    const isActive = faqItem.classList.contains('active');
+    
+    // Close all FAQ items
+    document.querySelectorAll('.faq-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    
+    // Open clicked item if it wasn't active
+    if (!isActive) {
+        faqItem.classList.add('active');
+    }
 }
 
 // --- ACCOUNT PAGE ---
@@ -1180,6 +1261,8 @@ function showPage(pageId) {
     const navMap = {
         'home': 'nav-home',
         'tokenomics': 'nav-tokenomics',
+        'faq': 'nav-faq',
+        'whitepaper': 'nav-whitepaper',
         'asset': 'nav-asset',
         'staking': 'nav-staking',
         'market': 'nav-market',
@@ -1195,7 +1278,10 @@ function showPage(pageId) {
     const menu = document.getElementById('sideMenu');
     if (menu && menu.classList.contains('open')) toggleMenu();
     
-    if (pageId === 'asset') loadChainData();
+    if (pageId === 'asset') {
+        if (!walletUnlocked) lockWallet();
+        loadWalletData();
+    }
     if (pageId === 'staking') updateStakingPage();
     if (pageId === 'market') initPriceChart();
     if (pageId === 'airdrop') updateAirdropPage();
@@ -1382,6 +1468,7 @@ function logout() {
         disconnectWallet(true);
     }
     
+    walletUnlocked = false;
     currentUser = null;
     localStorage.removeItem('pocketchain_currentUser');
     showPublicUI();
@@ -1589,7 +1676,7 @@ function updateTransactionHistory() {
 }
 
 function updateAllStats() {
-    if (currentUser) loadChainData();
+    if (currentUser) loadWalletData();
 }
 
 function showToast(title, message, type = 'success') {
@@ -1643,4 +1730,4 @@ function closeAllModals() {
 }
 
 console.log('🔷 PocketChain (PCH) Platform Loaded');
-console.log('✨ Professional DeFi Platform with All Features');
+console.log('✨ Professional DeFi Platform with PCH Wallet');
