@@ -59,13 +59,19 @@
             <a onclick="showPage('tokenomics')" id="nav-tokenomics">
                 <i class="fas fa-chart-pie"></i> Tokenomics
             </a>
+            <a onclick="showPage('faq')" id="nav-faq">
+                <i class="fas fa-question-circle"></i> FAQ
+            </a>
+            <a onclick="showPage('whitepaper')" id="nav-whitepaper">
+                <i class="fas fa-file-alt"></i> Whitepaper
+            </a>
         </div>
 
         <!-- Private Menu -->
         <div class="menu-section hidden" id="privateMenu">
             <div class="menu-label">Platform</div>
             <a onclick="showPage('asset')" id="nav-asset">
-                <i class="fas fa-wallet"></i> Assets
+                <i class="fas fa-wallet"></i> PCH Wallet
             </a>
             <a onclick="showPage('staking')" id="nav-staking">
                 <i class="fas fa-coins"></i> Staking Pro
@@ -75,6 +81,9 @@
             </a>
             <a onclick="showPage('airdrop')" id="nav-airdrop">
                 <i class="fas fa-gift"></i> Airdrop
+            </a>
+            <a onclick="showPage('tokenomics')" id="nav-tokenomics-private">
+                <i class="fas fa-chart-pie"></i> Tokenomics
             </a>
         </div>
 
@@ -277,77 +286,266 @@
             </div>
         </div>
 
-        <!-- ASSET PAGE - WITH ONCHAIN/OFFCHAIN -->
+        <!-- FAQ PAGE -->
+        <div id="faq" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-question-circle"></i> Frequently Asked Questions</h2>
+                </div>
+
+                <div class="faq-container">
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>What is PocketChain?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>PocketChain is a professional decentralized finance (DeFi) protocol built on blockchain technology. It offers staking services, crypto wallet management, and yield generation opportunities with institutional-grade security.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>How does PCH Wallet work?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>PCH Wallet is a non-custodial wallet, meaning your private keys and passphrase are exclusively accessible only to you. You have full control over your assets. You can unlock your wallet using your passphrase or biometric authentication (fingerprint).</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>What is staking and how do I earn rewards?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Staking is the process of locking your PCH tokens to support the network and earn rewards. Choose from our flexible staking pools with APY rates ranging from 15% to 125% depending on the lock period. Rewards are calculated daily and distributed at the end of the staking period.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>How do I deposit crypto to my PCH Wallet?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>To deposit crypto, go to your PCH Wallet and click the "Deposit" button. You can transfer crypto from any on-chain wallet or exchange by sending it to your unique PCH wallet address. Always verify the address before sending.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>What are the withdrawal options?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>We offer two withdrawal methods: P2P (Peer-to-Peer) for buying/selling crypto with PHP, and direct crypto withdrawal to external wallets or exchanges. Network fees of 0.5 PCH apply for crypto withdrawals.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>Is KYC verification required?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>KYC verification is required to unlock full platform features and higher withdrawal limits. The verification process typically takes 24-48 hours. Complete your KYC in the Account section under "My Account."</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>How secure is my wallet?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Your PCH Wallet uses industry-leading security measures including encryption, multi-signature support, and biometric authentication. As a non-custodial wallet, you maintain full control of your private keys. Never share your passphrase with anyone.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>How can I earn through the Airdrop program?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Participate in our Airdrop program by completing daily attendance check-ins, inviting friends using your referral code, and completing social media tasks. Earn up to 30 PCH tokens through social tasks and 5 PCH for each successful referral.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- WHITEPAPER PAGE -->
+        <div id="whitepaper" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-file-alt"></i> PocketChain Whitepaper</h2>
+                </div>
+
+                <div class="whitepaper-content">
+                    <div class="whitepaper-section">
+                        <h3><i class="fas fa-bullseye"></i> Executive Summary</h3>
+                        <p>PocketChain (PCH) is a next-generation decentralized finance protocol designed to democratize access to professional-grade staking services. Built on cutting-edge blockchain technology, PocketChain offers users a secure, transparent, and high-yield platform for crypto asset management.</p>
+                    </div>
+
+                    <div class="whitepaper-section">
+                        <h3><i class="fas fa-cube"></i> Technology Architecture</h3>
+                        <p>PocketChain leverages a multi-layer architecture combining the security of established blockchain networks with proprietary smart contracts for staking, yield distribution, and asset management. Our protocol features:</p>
+                        <ul>
+                            <li>Audited smart contracts with multi-signature security</li>
+                            <li>Real-time on-chain verification of all transactions</li>
+                            <li>Cross-chain compatibility for seamless asset transfers</li>
+                            <li>Advanced encryption for wallet security</li>
+                        </ul>
+                    </div>
+
+                    <div class="whitepaper-section">
+                        <h3><i class="fas fa-coins"></i> Token Utility</h3>
+                        <p>The PCH token serves as the native utility token of the PocketChain ecosystem with the following functions:</p>
+                        <ul>
+                            <li><strong>Staking:</strong> Lock PCH tokens to earn competitive APY rewards</li>
+                            <li><strong>Governance:</strong> Participate in protocol decisions through voting</li>
+                            <li><strong>Fee Reduction:</strong> Enjoy reduced fees when using PCH</li>
+                            <li><strong>Rewards:</strong> Earn PCH through airdrops, referrals, and participation</li>
+                        </ul>
+                    </div>
+
+                    <div class="whitepaper-section">
+                        <h3><i class="fas fa-chart-pie"></i> Token Distribution</h3>
+                        <p>With a total supply of 1 billion PCH tokens, our distribution model ensures long-term sustainability:</p>
+                        <ul>
+                            <li>40% Staking Rewards (400M PCH)</li>
+                            <li>20% Liquidity Provision (200M PCH)</li>
+                            <li>15% Team Allocation (150M PCH) - 4-year vesting</li>
+                            <li>10% Development Fund (100M PCH)</li>
+                            <li>10% Community & Airdrop (100M PCH)</li>
+                            <li>5% Reserve Fund (50M PCH)</li>
+                        </ul>
+                    </div>
+
+                    <div class="whitepaper-section">
+                        <h3><i class="fas fa-shield-alt"></i> Security Framework</h3>
+                        <p>Security is paramount at PocketChain. Our multi-layered security approach includes:</p>
+                        <ul>
+                            <li>Third-party smart contract audits by leading security firms</li>
+                            <li>Real-time monitoring and anomaly detection</li>
+                            <li>Bug bounty program for community security contributions</li>
+                            <li>Insurance fund for protocol protection</li>
+                        </ul>
+                    </div>
+
+                    <div class="whitepaper-section">
+                        <h3><i class="fas fa-road"></i> Roadmap</h3>
+                        <div class="roadmap-timeline">
+                            <div class="roadmap-item completed">
+                                <span class="roadmap-quarter">Q1 2024</span>
+                                <span class="roadmap-desc">Platform Launch & Token Generation</span>
+                            </div>
+                            <div class="roadmap-item completed">
+                                <span class="roadmap-quarter">Q2 2024</span>
+                                <span class="roadmap-desc">Staking Pro & Mobile App Beta</span>
+                            </div>
+                            <div class="roadmap-item active">
+                                <span class="roadmap-quarter">Q3 2024</span>
+                                <span class="roadmap-desc">Cross-Chain Integration & DEX Launch</span>
+                            </div>
+                            <div class="roadmap-item">
+                                <span class="roadmap-quarter">Q4 2024</span>
+                                <span class="roadmap-desc">Governance DAO & Global Expansion</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="whitepaper-download">
+                        <button class="btn-primary" onclick="showToast('Coming Soon', 'Full whitepaper PDF download will be available soon')">
+                            <i class="fas fa-download"></i> Download Full Whitepaper (PDF)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PCH WALLET PAGE -->
         <div id="asset" class="page">
             <div class="dashboard-header">
                 <div class="welcome-text">
-                    <h1>My Assets</h1>
-                    <p>Manage your PCH portfolio</p>
+                    <h1><i class="fas fa-wallet"></i> PCH Wallet</h1>
+                    <p>Non-custodial wallet - Your keys, your crypto</p>
                 </div>
             </div>
 
-            <!-- Chain Toggle -->
-            <div class="chain-toggle-container">
-                <button class="chain-toggle-btn active" id="onchainBtn" onclick="switchChain('onchain')">
-                    <i class="fas fa-link"></i> Onchain
-                </button>
-                <button class="chain-toggle-btn" id="offchainBtn" onclick="switchChain('offchain')">
-                    <i class="fas fa-server"></i> Offchain
-                </button>
-            </div>
-
-            <div class="asset-overview">
-                <div class="asset-card">
-                    <div class="asset-label">Total Balance</div>
-                    <div class="asset-value" id="totalBalance">0.00 PCH</div>
-                    <div class="asset-sub">≈ $0.00 USD</div>
-                </div>
-                <div class="asset-card">
-                    <div class="asset-label">Available</div>
-                    <div class="asset-value" id="availableBalance">0.00 PCH</div>
-                    <div class="asset-sub">Ready to use</div>
-                </div>
-                <div class="asset-card">
-                    <div class="asset-label">Staked</div>
-                    <div class="asset-value" id="stakedBalance">0.00 PCH</div>
-                    <div class="asset-sub">Earning rewards</div>
-                </div>
-                <div class="asset-card">
-                    <div class="asset-label">Rewards</div>
-                    <div class="asset-value" id="rewardsBalance">0.00 PCH</div>
-                    <div class="asset-sub">Claimable</div>
+            <!-- Wallet Security Notice -->
+            <div class="wallet-security-notice">
+                <i class="fas fa-shield-alt"></i>
+                <div class="security-text">
+                    <strong>Non-Custodial Wallet</strong>
+                    <span>Your wallet passphrase is exclusively accessible only to you. Never share it with anyone.</span>
                 </div>
             </div>
 
-            <div class="action-buttons">
-                <button class="action-btn" onclick="openSendModal()">
-                    <i class="fas fa-paper-plane"></i>
-                    <span>Send</span>
+            <!-- Unlock Buttons -->
+            <div class="unlock-buttons" id="unlockButtons">
+                <button class="unlock-btn passphrase" onclick="unlockWithPassphrase()">
+                    <i class="fas fa-key"></i>
+                    <span>Unlock with Passphrase</span>
                 </button>
-                <button class="action-btn" onclick="openReceiveModal()">
-                    <i class="fas fa-qrcode"></i>
-                    <span>Receive</span>
-                </button>
-                <button class="action-btn" onclick="openConvertModal()">
-                    <i class="fas fa-exchange-alt"></i>
-                    <span>Convert</span>
-                </button>
-                <button class="action-btn" onclick="openWithdrawModal()">
-                    <i class="fas fa-university"></i>
-                    <span>Withdraw</span>
+                <button class="unlock-btn fingerprint" onclick="unlockWithFingerprint()">
+                    <i class="fas fa-fingerprint"></i>
+                    <span>Unlock with Fingerprint</span>
                 </button>
             </div>
 
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-history"></i> Recent Transactions</h3>
-                </div>
-                <div id="transactionHistory">
-                    <div class="empty-state">
-                        <i class="fas fa-exchange-alt"></i>
-                        <p>No transactions yet</p>
+            <!-- Wallet Content (Hidden until unlocked) -->
+            <div class="wallet-content hidden" id="walletContent">
+                <div class="asset-overview">
+                    <div class="asset-card main-balance">
+                        <div class="asset-label">Available Balance</div>
+                        <div class="asset-value" id="availableBalance">0.00 PCH</div>
+                        <div class="asset-sub" id="balanceUsd">≈ $0.00 USD</div>
                     </div>
                 </div>
+
+                <div class="action-buttons">
+                    <button class="action-btn" onclick="openDepositModal()">
+                        <i class="fas fa-arrow-down"></i>
+                        <span>Deposit</span>
+                    </button>
+                    <button class="action-btn" onclick="openWithdrawOptionsModal()">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>Withdraw</span>
+                    </button>
+                    <button class="action-btn" onclick="openConvertModal()">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span>Convert</span>
+                    </button>
+                    <button class="action-btn" onclick="openSendModal()">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>Send</span>
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-history"></i> Recent Transactions</h3>
+                    </div>
+                    <div id="transactionHistory">
+                        <div class="empty-state">
+                            <i class="fas fa-exchange-alt"></i>
+                            <p>No transactions yet</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Locked State -->
+            <div class="wallet-locked-state" id="walletLockedState">
+                <div class="locked-icon">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <h3>Wallet Locked</h3>
+                <p>Please unlock your wallet to view balance and perform transactions.</p>
             </div>
         </div>
 
@@ -635,7 +833,7 @@
             </div>
 
             <!-- Leaderboard - SEPARATE -->
-            <div class="leaderboard-section">
+            <div class="leaderboard-section" id="leaderboardSection">
                 <div class="leaderboard-header">
                     <i class="fas fa-trophy"></i>
                     <h3>Leaderboard</h3>
@@ -649,6 +847,12 @@
 
                 <div class="leaderboard-list" id="leaderboardList">
                     <!-- Populated by JS -->
+                </div>
+                
+                <div class="leaderboard-placeholder" id="leaderboardPlaceholder">
+                    <i class="fas fa-trophy"></i>
+                    <p>Leaderboard data will be available soon</p>
+                    <span>Stay tuned for the competition!</span>
                 </div>
             </div>
         </div>
@@ -937,123 +1141,184 @@
         </div>
     </div>
 
-    <!-- Send Modal -->
-    <div class="modal" id="sendModal">
+    <!-- Passphrase Unlock Modal -->
+    <div class="modal" id="passphraseModal">
         <div class="modal-content">
-            <button class="close-modal" onclick="closeSendModal()"><i class="fas fa-times"></i></button>
+            <button class="close-modal" onclick="closePassphraseModal()"><i class="fas fa-times"></i></button>
             <div class="modal-header">
-                <h3 class="modal-title">Send PCH</h3>
-                <p class="modal-subtitle">Transfer tokens to another wallet</p>
+                <h3 class="modal-title"><i class="fas fa-key"></i> Unlock with Passphrase</h3>
+                <p class="modal-subtitle">Enter your wallet passphrase to access your funds</p>
             </div>
             <div class="modal-body">
-                <div class="chain-indicator">
-                    <span class="chain-badge" id="sendChainBadge">Onchain</span>
+                <div class="wallet-security-info">
+                    <i class="fas fa-shield-alt"></i>
+                    <p>Your passphrase is never stored on our servers. It is exclusively accessible only to you.</p>
                 </div>
                 <div class="form-group">
-                    <label>Recipient Address</label>
-                    <input type="text" class="form-input" id="sendAddress" placeholder="0x...">
-                </div>
-                <div class="form-group">
-                    <label>Amount</label>
-                    <input type="number" class="form-input" id="sendAmount" placeholder="0.00">
-                    <div class="input-meta">
-                        <span class="balance-display">Available: <span id="sendAvailableBalance">0.00</span> PCH</span>
+                    <label>Wallet Passphrase</label>
+                    <div class="password-wrapper">
+                        <input type="password" class="form-input" id="walletPassphrase" placeholder="Enter your 12 or 24-word passphrase">
+                        <button class="toggle-password" onclick="togglePassword('walletPassphrase', this)">
+                            <i class="fas fa-eye"></i>
+                        </button>
                     </div>
                 </div>
-                <button class="btn-submit" onclick="executeSend()">Send Tokens</button>
+                <button class="btn-submit" onclick="confirmPassphraseUnlock()">
+                    <i class="fas fa-unlock"></i> Unlock Wallet
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Receive Modal -->
-    <div class="modal" id="receiveModal">
+    <!-- Deposit Modal -->
+    <div class="modal" id="depositModal">
         <div class="modal-content">
-            <button class="close-modal" onclick="closeReceiveModal()"><i class="fas fa-times"></i></button>
+            <button class="close-modal" onclick="closeDepositModal()"><i class="fas fa-times"></i></button>
             <div class="modal-header">
-                <h3 class="modal-title">Receive PCH</h3>
-                <p class="modal-subtitle">Your wallet address</p>
+                <h3 class="modal-title"><i class="fas fa-arrow-down"></i> Deposit Crypto</h3>
+                <p class="modal-subtitle">Transfer crypto from an On-chain wallet or Exchange</p>
             </div>
-            <div class="modal-body receive-body">
-                <div class="chain-indicator">
-                    <span class="chain-badge" id="receiveChainBadge">Onchain</span>
+            <div class="modal-body">
+                <div class="deposit-info">
+                    <i class="fas fa-info-circle"></i>
+                    <p>Send PCH tokens to your unique wallet address below. Make sure you're sending on the correct network.</p>
                 </div>
+                
                 <div class="qr-placeholder">
-                    <div class="qr-code" id="receiveQR">QR CODE</div>
+                    <div class="qr-code" id="depositQR">QR CODE</div>
                 </div>
+                
                 <div class="form-group">
-                    <label>Your Address</label>
+                    <label>Your PCH Wallet Address</label>
                     <div class="address-row">
-                        <input type="text" class="form-input" id="receiveAddress" readonly value="Not connected">
-                        <button onclick="copyAddress()" class="copy-btn">Copy</button>
+                        <input type="text" class="form-input" id="depositAddress" readonly value="Not connected">
+                        <button onclick="copyDepositAddress()" class="copy-btn">Copy</button>
                     </div>
+                </div>
+
+                <div class="deposit-networks">
+                    <label>Supported Networks</label>
+                    <div class="network-tags">
+                        <span class="network-tag active">PocketChain</span>
+                        <span class="network-tag">BSC</span>
+                        <span class="network-tag">ERC-20</span>
+                    </div>
+                </div>
+                
+                <div class="deposit-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Only send PCH tokens to this address. Sending other tokens may result in permanent loss.</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Convert Modal - BIDIRECTIONAL -->
-    <div class="modal" id="convertModal">
+    <!-- Withdraw Options Modal -->
+    <div class="modal" id="withdrawOptionsModal">
         <div class="modal-content">
-            <button class="close-modal" onclick="closeConvertModal()"><i class="fas fa-times"></i></button>
+            <button class="close-modal" onclick="closeWithdrawOptionsModal()"><i class="fas fa-times"></i></button>
             <div class="modal-header">
-                <h3 class="modal-title">Convert</h3>
-                <p class="modal-subtitle">Swap between PCH and other cryptocurrencies</p>
+                <h3 class="modal-title"><i class="fas fa-arrow-up"></i> Withdraw</h3>
+                <p class="modal-subtitle">Choose your withdrawal method</p>
             </div>
             <div class="modal-body">
-                <!-- Direction Toggle -->
-                <div class="convert-direction-toggle">
-                    <button class="direction-btn active" id="pchToCryptoBtn" onclick="setConvertDirection('pchToCrypto')">
-                        PCH → Crypto
+                <div class="withdraw-options">
+                    <button class="withdraw-option-btn" onclick="openP2PModal()">
+                        <div class="withdraw-option-icon p2p">
+                            <i class="fas fa-handshake"></i>
+                        </div>
+                        <div class="withdraw-option-info">
+                            <h4>P2P Trading</h4>
+                            <p>Buy/Sell crypto with PHP</p>
+                            <span class="withdraw-badge">PHP to PCH</span>
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
                     </button>
-                    <button class="direction-btn" id="cryptoToPchBtn" onclick="setConvertDirection('cryptoToPch')">
-                        Crypto → PCH
+                    
+                    <button class="withdraw-option-btn" onclick="openWithdrawCryptoModal()">
+                        <div class="withdraw-option-icon crypto">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <div class="withdraw-option-info">
+                            <h4>Withdraw Crypto</h4>
+                            <p>Transfer crypto to a wallet or Exchange</p>
+                            <span class="withdraw-badge">On-chain</span>
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
 
-                <div class="convert-box">
+    <!-- P2P Modal -->
+    <div class="modal" id="p2pModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeP2PModal()"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-handshake"></i> P2P Trading</h3>
+                <p class="modal-subtitle">Buy Crypto - PHP to PCH</p>
+            </div>
+            <div class="modal-body">
+                <div class="p2p-tabs">
+                    <button class="p2p-tab active" onclick="switchP2PTab('buy')">Buy PCH</button>
+                    <button class="p2p-tab" onclick="switchP2PTab('sell')">Sell PCH</button>
+                </div>
+
+                <div class="p2p-calculator">
                     <div class="form-group">
-                        <label id="convertFromLabel">From (PCH)</label>
-                        <input type="number" class="form-input" id="convertFromAmount" placeholder="0.00" oninput="updateConvertRates()">
+                        <label>I want to pay (PHP)</label>
+                        <input type="number" class="form-input" id="p2pPhpAmount" placeholder="0.00" oninput="calculateP2P()">
                     </div>
-                    <div class="convert-arrow" onclick="swapConvertDirection()">
+                    <div class="convert-arrow">
                         <i class="fas fa-exchange-alt"></i>
                     </div>
                     <div class="form-group">
-                        <label id="convertToLabel">To</label>
-                        <select class="form-input" id="convertToCurrency" onchange="updateConvertRates()">
-                            <option value="USDT">USDT</option>
-                            <option value="USDC">USDC</option>
-                            <option value="BTC">BTC</option>
-                            <option value="ETH">ETH</option>
-                            <option value="SOL">SOL</option>
-                            <option value="XRP">XRP</option>
-                            <option value="POL">POL</option>
-                        </select>
+                        <label>I will receive (PCH)</label>
+                        <input type="number" class="form-input" id="p2pPchAmount" placeholder="0.00" readonly>
+                    </div>
+                    <div class="p2p-rate">
+                        <span>Rate: 1 PCH = ₱2.50 PHP</span>
                     </div>
                 </div>
-                
-                <div class="convert-result">
-                    <div class="convert-result-label">You will receive</div>
-                    <div class="convert-result-value" id="convertToAmount">0.00</div>
+
+                <div class="p2p-payment-methods">
+                    <label>Payment Method</label>
+                    <div class="payment-options">
+                        <button class="payment-option active">
+                            <i class="fas fa-university"></i>
+                            <span>Bank Transfer</span>
+                        </button>
+                        <button class="payment-option">
+                            <i class="fas fa-mobile-alt"></i>
+                            <span>GCash</span>
+                        </button>
+                        <button class="payment-option">
+                            <i class="fas fa-wallet"></i>
+                            <span>Maya</span>
+                        </button>
+                    </div>
                 </div>
-                
-                <div class="convert-rate-info">
-                    <i class="fas fa-info-circle"></i> 
-                    <span id="convertRateText">Rate: 1 PCH = $0.045 USDT</span>
+
+                <button class="btn-submit" onclick="executeP2POrder()">
+                    <i class="fas fa-check-circle"></i> Confirm Order
+                </button>
+
+                <div class="p2p-notice">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>P2P transactions are protected by our escrow system. Funds are released only after both parties confirm.</span>
                 </div>
-                
-                <button class="btn-submit" onclick="executeConvert()">Convert Now</button>
             </div>
         </div>
     </div>
 
-    <!-- Withdraw Modal - WITH WALLET INTEGRATION -->
-    <div class="modal" id="withdrawModal">
+    <!-- Withdraw Crypto Modal -->
+    <div class="modal" id="withdrawCryptoModal">
         <div class="modal-content">
-            <button class="close-modal" onclick="closeWithdrawModal()"><i class="fas fa-times"></i></button>
+            <button class="close-modal" onclick="closeWithdrawCryptoModal()"><i class="fas fa-times"></i></button>
             <div class="modal-header">
-                <h3 class="modal-title">Withdraw PCH</h3>
-                <p class="modal-subtitle">Withdraw to your connected wallet</p>
+                <h3 class="modal-title"><i class="fas fa-wallet"></i> Withdraw Crypto</h3>
+                <p class="modal-subtitle">Transfer crypto to a wallet or Exchange</p>
             </div>
             <div class="modal-body">
                 <div class="wallet-status-box" id="withdrawWalletStatus">
@@ -1090,6 +1355,113 @@
                 
                 <button class="btn-submit" id="withdrawSubmitBtn" onclick="executeWithdraw()" disabled>
                     Connect Wallet to Withdraw
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Send Modal -->
+    <div class="modal" id="sendModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeSendModal()"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <h3 class="modal-title">Send PCH</h3>
+                <p class="modal-subtitle">Transfer tokens to another wallet</p>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Recipient Address</label>
+                    <input type="text" class="form-input" id="sendAddress" placeholder="0x...">
+                </div>
+                <div class="form-group">
+                    <label>Amount</label>
+                    <input type="number" class="form-input" id="sendAmount" placeholder="0.00">
+                    <div class="input-meta">
+                        <span class="balance-display">Available: <span id="sendAvailableBalance">0.00</span> PCH</span>
+                    </div>
+                </div>
+                <button class="btn-submit" onclick="executeSend()">Send Tokens</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Convert Modal - IMPROVED -->
+    <div class="modal" id="convertModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeConvertModal()"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-exchange-alt"></i> Convert</h3>
+                <p class="modal-subtitle">Quick and easy crypto conversion</p>
+            </div>
+            <div class="modal-body">
+                <!-- Quick Convert Presets -->
+                <div class="convert-presets">
+                    <label>Quick Amounts</label>
+                    <div class="preset-buttons">
+                        <button onclick="setConvertAmount(100)">100 PCH</button>
+                        <button onclick="setConvertAmount(500)">500 PCH</button>
+                        <button onclick="setConvertAmount(1000)">1000 PCH</button>
+                        <button onclick="setConvertAmount(5000)">5000 PCH</button>
+                    </div>
+                </div>
+
+                <!-- Convert Card -->
+                <div class="convert-card">
+                    <div class="convert-input-section">
+                        <div class="convert-label-row">
+                            <label>From</label>
+                            <span class="convert-balance">Balance: <span id="convertFromBalance">0.00</span> PCH</span>
+                        </div>
+                        <div class="convert-input-row">
+                            <input type="number" class="convert-amount-input" id="convertFromAmount" placeholder="0.00" oninput="updateConvertRates()">
+                            <div class="convert-currency-select">
+                                <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24'><circle fill='%2300c2ff' cx='12' cy='12' r='12'/><text x='50%' y='50%' text-anchor='middle' dy='.3em' fill='%23000' font-size='10'>PCH</text></svg>" alt="PCH">
+                                <span>PCH</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="convert-swap-btn" onclick="swapConvertDirection()">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+
+                    <div class="convert-input-section">
+                        <div class="convert-label-row">
+                            <label>To</label>
+                        </div>
+                        <div class="convert-input-row">
+                            <input type="number" class="convert-amount-input" id="convertToAmount" placeholder="0.00" readonly>
+                            <select class="convert-currency-dropdown" id="convertToCurrency" onchange="updateConvertRates()">
+                                <option value="USDT">USDT</option>
+                                <option value="USDC">USDC</option>
+                                <option value="BTC">BTC</option>
+                                <option value="ETH">ETH</option>
+                                <option value="SOL">SOL</option>
+                                <option value="XRP">XRP</option>
+                                <option value="POL">POL</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rate Info -->
+                <div class="convert-rate-card">
+                    <div class="rate-row">
+                        <span>Exchange Rate</span>
+                        <span id="convertRateText">1 PCH = $0.045 USDT</span>
+                    </div>
+                    <div class="rate-row">
+                        <span>Network Fee</span>
+                        <span>0.1 PCH</span>
+                    </div>
+                    <div class="rate-row total">
+                        <span>You Receive</span>
+                        <span id="convertReceiveAmount">0.00 USDT</span>
+                    </div>
+                </div>
+                
+                <button class="btn-submit convert-btn" onclick="executeConvert()">
+                    <i class="fas fa-bolt"></i> Convert Now
                 </button>
             </div>
         </div>
