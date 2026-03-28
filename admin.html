@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PCH Admin | KYC Approvals</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="logo"><i class="fas fa-shield-alt"></i> <span>PCH ADMIN</span></div>
+        <a href="index.html" style="color: var(--primary); text-decoration: none;"><i class="fas fa-arrow-left"></i> Back to Platform</a>
+    </header>
+
+    <div class="content-area">
+        <div class="dashboard-header">
+            <div class="welcome-text">
+                <h1>Pending KYC Verifications</h1>
+                <p>Review user documents to verify their accounts.</p>
+            </div>
+        </div>
+        
+        <div id="adminKycList" class="card">
+            <div class="empty-state">Loading submissions...</div>
+        </div>
+    </div>
+
+    <script type="module" src="admin.js"></script>
+</body>
+</html>
