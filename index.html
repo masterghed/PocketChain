@@ -11,7 +11,6 @@
 </head>
 <body>
 
-    <!-- Header -->
     <header>
         <div class="header-spacer"></div>
         <div class="logo">
@@ -26,19 +25,15 @@
         </div>
     </header>
 
-    <!-- Menu Toggle -->
     <button class="menu-toggle" onclick="toggleMenu()">
         <i class="fas fa-bars"></i>
     </button>
 
-    <!-- Overlay -->
     <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
-    <!-- Side Menu -->
     <div id="sideMenu">
         <button class="close-menu" onclick="toggleMenu()"><i class="fas fa-times"></i></button>
         
-        <!-- Theme Toggle -->
         <button class="theme-toggle" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Theme">
             <i class="fas fa-moon" id="themeIcon"></i>
         </button>
@@ -50,7 +45,6 @@
             </div>
         </div>
 
-        <!-- Public Menu -->
         <div class="menu-section" id="publicMenu">
             <div class="menu-label">Explore</div>
             <a onclick="showPage('home')" class="active" id="nav-home">
@@ -67,7 +61,6 @@
             </a>
         </div>
 
-        <!-- Private Menu -->
         <div class="menu-section hidden" id="privateMenu">
             <div class="menu-label">Platform</div>
             <a onclick="showPage('asset')" id="nav-asset">
@@ -97,7 +90,6 @@
             </a>
         </div>
 
-        <!-- Account Menu -->
         <div class="menu-section hidden" id="accountMenu">
             <div class="menu-label">Account</div>
             <a onclick="showPage('account')" id="nav-account">
@@ -108,7 +100,6 @@
             </a>
         </div>
 
-        <!-- Login Menu -->
         <div class="menu-section" id="loginMenu">
             <a onclick="openAuthModal('login')" class="menu-login-btn">
                 <i class="fas fa-sign-in-alt"></i> Sign In
@@ -116,10 +107,8 @@
         </div>
     </div>
 
-    <!-- Main Content -->
     <div class="content-area">
         
-        <!-- HOME PAGE -->
         <div id="home" class="page active">
             <div class="hero">
                 <div class="hero-badge">
@@ -160,7 +149,6 @@
                 </div>
             </div>
 
-            <!-- Mission Section -->
             <div class="mission-section" id="publicMission">
                 <div class="section-header">
                     <h2>Mission & Vision</h2>
@@ -219,7 +207,6 @@
             </div>
         </div>
 
-        <!-- TOKENOMICS PAGE -->
         <div id="tokenomics" class="page">
             <div class="card">
                 <div class="card-header">
@@ -286,7 +273,6 @@
             </div>
         </div>
 
-        <!-- FAQ PAGE -->
         <div id="faq" class="page">
             <div class="card">
                 <div class="card-header">
@@ -377,7 +363,6 @@
             </div>
         </div>
 
-        <!-- WHITEPAPER PAGE -->
         <div id="whitepaper" class="page">
             <div class="card">
                 <div class="card-header">
@@ -467,7 +452,6 @@
             </div>
         </div>
 
-        <!-- PCH WALLET PAGE -->
         <div id="asset" class="page">
             <div class="dashboard-header">
                 <div class="welcome-text">
@@ -476,7 +460,6 @@
                 </div>
             </div>
 
-            <!-- Wallet Security Notice -->
             <div class="wallet-security-notice">
                 <i class="fas fa-shield-alt"></i>
                 <div class="security-text">
@@ -485,7 +468,6 @@
                 </div>
             </div>
 
-            <!-- Unlock Buttons -->
             <div class="unlock-buttons" id="unlockButtons">
                 <button class="unlock-btn passphrase" onclick="unlockWithPassphrase()">
                     <i class="fas fa-key"></i>
@@ -497,7 +479,6 @@
                 </button>
             </div>
 
-            <!-- Wallet Content (Hidden until unlocked) -->
             <div class="wallet-content hidden" id="walletContent">
                 <div class="asset-overview">
                     <div class="asset-card main-balance">
@@ -539,7 +520,6 @@
                 </div>
             </div>
 
-            <!-- Locked State -->
             <div class="wallet-locked-state" id="walletLockedState">
                 <div class="locked-icon">
                     <i class="fas fa-lock"></i>
@@ -549,7 +529,6 @@
             </div>
         </div>
 
-        <!-- STAKING PRO PAGE -->
         <div id="staking" class="page">
             <div class="dashboard-header">
                 <div class="welcome-text">
@@ -660,7 +639,6 @@
             </div>
         </div>
 
-        <!-- MARKET PAGE -->
         <div id="market" class="page">
             <div class="dashboard-header">
                 <div class="welcome-text">
@@ -708,7 +686,6 @@
             </div>
         </div>
 
-        <!-- AIRDROP PAGE - UNIFIED FRAME -->
         <div id="airdrop" class="page">
             <div class="dashboard-header">
                 <div class="welcome-text">
@@ -717,9 +694,7 @@
                 </div>
             </div>
 
-            <!-- Unified Glass Frame -->
             <div class="unified-airdrop-frame">
-                <!-- Daily Attendance -->
                 <div class="attendance-section">
                     <div class="attendance-header">
                         <i class="fas fa-calendar-check"></i>
@@ -750,7 +725,6 @@
 
                 <div class="frame-divider"></div>
 
-                <!-- Invite Friends -->
                 <div class="referral-section">
                     <div class="referral-header">
                         <i class="fas fa-user-plus"></i>
@@ -785,7 +759,6 @@
 
                 <div class="frame-divider"></div>
 
-                <!-- Social Airdrop -->
                 <div class="social-airdrop-section">
                     <div class="social-header">
                         <i class="fas fa-share-alt"></i>
@@ -832,7 +805,6 @@
                 </div>
             </div>
 
-            <!-- Leaderboard - SEPARATE -->
             <div class="leaderboard-section" id="leaderboardSection">
                 <div class="leaderboard-header">
                     <i class="fas fa-trophy"></i>
@@ -846,8 +818,7 @@
                 </div>
 
                 <div class="leaderboard-list" id="leaderboardList">
-                    <!-- Populated by JS -->
-                </div>
+                    </div>
                 
                 <div class="leaderboard-placeholder" id="leaderboardPlaceholder">
                     <i class="fas fa-trophy"></i>
@@ -857,7 +828,6 @@
             </div>
         </div>
 
-        <!-- ACCOUNT PAGE -->
         <div id="account" class="page">
             <div class="dashboard-header">
                 <div class="welcome-text">
@@ -866,7 +836,6 @@
                 </div>
             </div>
 
-            <!-- KYC Section -->
             <div class="kyc-section">
                 <div class="kyc-header">
                     <h3><i class="fas fa-id-card"></i> KYC Verification</h3>
@@ -933,7 +902,6 @@
             </div>
         </div>
 
-        <!-- SUPPORT PAGE -->
         <div id="support" class="page">
             <div class="card">
                 <div class="card-header">
@@ -967,7 +935,6 @@
             </div>
         </div>
 
-        <!-- TERMS PAGE -->
         <div id="terms" class="page">
             <div class="card">
                 <div class="card-header">
@@ -1004,7 +971,6 @@
         </div>
     </div>
 
-    <!-- Wallet Modal -->
     <div class="modal" id="walletModal">
         <div class="modal-content">
             <button class="close-modal" onclick="closeWalletModal()"><i class="fas fa-times"></i></button>
@@ -1035,12 +1001,10 @@
         </div>
     </div>
 
-    <!-- Auth Modal -->
     <div class="modal" id="authModal">
         <div class="modal-content">
             <button class="close-modal" onclick="closeAuthModal()"><i class="fas fa-times"></i></button>
             
-            <!-- Login Form -->
             <div id="loginForm">
                 <div class="modal-header">
                     <h3 class="modal-title">Welcome Back</h3>
@@ -1068,7 +1032,6 @@
                 </div>
             </div>
 
-            <!-- Signup Form -->
             <div id="signupForm" style="display: none;">
                 <div class="modal-header">
                     <h3 class="modal-title">Create Account</h3>
@@ -1141,7 +1104,6 @@
         </div>
     </div>
 
-    <!-- Passphrase Unlock Modal -->
     <div class="modal" id="passphraseModal">
         <div class="modal-content">
             <button class="close-modal" onclick="closePassphraseModal()"><i class="fas fa-times"></i></button>
@@ -1170,7 +1132,6 @@
         </div>
     </div>
 
-    <!-- Deposit Modal -->
     <div class="modal" id="depositModal">
         <div class="modal-content">
             <button class="close-modal" onclick="closeDepositModal()"><i class="fas fa-times"></i></button>
@@ -1213,7 +1174,6 @@
         </div>
     </div>
 
-    <!-- Withdraw Options Modal -->
     <div class="modal" id="withdrawOptionsModal">
         <div class="modal-content">
             <button class="close-modal" onclick="closeWithdrawOptionsModal()"><i class="fas fa-times"></i></button>
@@ -1251,7 +1211,6 @@
         </div>
     </div>
 
-    <!-- P2P Modal -->
     <div class="modal" id="p2pModal">
         <div class="modal-content">
             <button class="close-modal" onclick="closeP2PModal()"><i class="fas fa-times"></i></button>
@@ -1312,7 +1271,6 @@
         </div>
     </div>
 
-    <!-- Withdraw Crypto Modal -->
     <div class="modal" id="withdrawCryptoModal">
         <div class="modal-content">
             <button class="close-modal" onclick="closeWithdrawCryptoModal()"><i class="fas fa-times"></i></button>
@@ -1360,7 +1318,6 @@
         </div>
     </div>
 
-    <!-- Send Modal -->
     <div class="modal" id="sendModal">
         <div class="modal-content">
             <button class="close-modal" onclick="closeSendModal()"><i class="fas fa-times"></i></button>
@@ -1385,7 +1342,6 @@
         </div>
     </div>
 
-    <!-- Convert Modal - IMPROVED -->
     <div class="modal" id="convertModal">
         <div class="modal-content">
             <button class="close-modal" onclick="closeConvertModal()"><i class="fas fa-times"></i></button>
@@ -1394,7 +1350,6 @@
                 <p class="modal-subtitle">Quick and easy crypto conversion</p>
             </div>
             <div class="modal-body">
-                <!-- Quick Convert Presets -->
                 <div class="convert-presets">
                     <label>Quick Amounts</label>
                     <div class="preset-buttons">
@@ -1405,7 +1360,6 @@
                     </div>
                 </div>
 
-                <!-- Convert Card -->
                 <div class="convert-card">
                     <div class="convert-input-section">
                         <div class="convert-label-row">
@@ -1444,7 +1398,6 @@
                     </div>
                 </div>
 
-                <!-- Rate Info -->
                 <div class="convert-rate-card">
                     <div class="rate-row">
                         <span>Exchange Rate</span>
@@ -1467,7 +1420,6 @@
         </div>
     </div>
 
-    <!-- Bug Report Modal -->
     <div class="modal" id="bugModal">
         <div class="modal-content">
             <button class="close-modal" onclick="closeBugModal()"><i class="fas fa-times"></i></button>
@@ -1494,7 +1446,6 @@
         </div>
     </div>
 
-    <!-- KYC Modal - WITH CAMERA -->
     <div class="modal" id="kycModal">
         <div class="modal-content" style="max-width: 500px;">
             <button class="close-modal" onclick="closeKYCModal()"><i class="fas fa-times"></i></button>
@@ -1612,7 +1563,6 @@
         </div>
     </div>
 
-    <!-- Camera Modal -->
     <div class="modal" id="cameraModal">
         <div class="modal-content" style="max-width: 500px;">
             <button class="close-modal" onclick="closeCameraModal()"><i class="fas fa-times"></i></button>
@@ -1644,7 +1594,6 @@
         </div>
     </div>
 
-    <!-- Toast -->
     <div class="toast" id="toast">
         <i class="fas fa-check-circle toast-icon"></i>
         <div class="toast-content">
@@ -1653,7 +1602,9 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
-    <script src="kyc.js"></script>
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="web3.js"></script>
+    <script type="module" src="script.js"></script>
+    <script type="module" src="kyc.js"></script>
 </body>
 </html>
