@@ -3,198 +3,347 @@
 // With Real Cloud Storage & Camera Capture
 // ==========================================
 
-import { auth, db, storage } from './firebase-config.js';
-import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
-import { ref, uploadString, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js";
+import { auth } from './firebase-config.js';
+import { submitKYC, getUserKYC } from './modules/firestore.js';
+import { uploadKYCDocument, uploadKYCSelfie, validateFile } from './modules/storage.js';
 
-let currentStream = null;
-let selfieDataUrl = null;
-let idFile = null;
+// ==========================================
+// KYC STATE
+// ==========================================
+const KYCState = {
+  currentStream: null,
+  selfieDataUrl: null,
+  idFile: null,
+  isSubmitting: false
+};
 
-// --- CAMERA CONTROLS ---
+// ==========================================
+// CAMERA FUNCTIONS
+// ==========================================
+
 window.openCameraModal = () => {
-    document.getElementById('cameraModal').classList.add('active');
-    
-    // Request Camera Access
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-        .then(stream => {
-            currentStream = stream;
-            document.getElementById('cameraVideo').srcObject = stream;
-            document.getElementById('cameraVideo').style.display = 'block';
-            document.getElementById('cameraCanvas').style.display = 'none';
-            document.getElementById('captureBtn').style.display = 'inline-block';
-            document.getElementById('retakeBtn').style.display = 'none';
-            document.getElementById('confirmBtn').style.display = 'none';
-        })
-        .catch(err => {
-            window.showToast('Error', 'Camera access denied or unavailable', 'error');
-            console.error("Camera Error: ", err);
-        });
+  const modal = document.getElementById('cameraModal');
+  if (modal) {
+    modal.classList.add('active');
+    startCamera();
+  }
 };
 
 window.closeCameraModal = () => {
-    document.getElementById('cameraModal').classList.remove('active');
-    if (currentStream) {
-        currentStream.getTracks().forEach(track => track.stop());
-        currentStream = null;
-    }
+  const modal = document.getElementById('cameraModal');
+  if (modal) {
+    modal.classList.remove('active');
+    stopCamera();
+  }
 };
 
-window.capturePhoto = () => {
+async function startCamera() {
+  try {
+    KYCState.currentStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: 'user',
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      }
+    });
+    
     const video = document.getElementById('cameraVideo');
     const canvas = document.getElementById('cameraCanvas');
     
-    // Set canvas dimensions to match video
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    if (video) {
+      video.srcObject = KYCState.currentStream;
+      video.style.display = 'block';
+    }
+    if (canvas) canvas.style.display = 'none';
     
-    // Draw image to canvas
-    canvas.getContext('2d').drawImage(video, 0, 0);
+    // Show/hide buttons
+    const captureBtn = document.getElementById('captureBtn');
+    const retakeBtn = document.getElementById('retakeBtn');
+    const confirmBtn = document.getElementById('confirmBtn');
     
-    // Convert to Base64 image
-    selfieDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+    if (captureBtn) captureBtn.style.display = 'inline-block';
+    if (retakeBtn) retakeBtn.style.display = 'none';
+    if (confirmBtn) confirmBtn.style.display = 'none';
     
-    // Update UI
-    video.style.display = 'none';
-    canvas.style.display = 'block';
-    document.getElementById('captureBtn').style.display = 'none';
-    document.getElementById('retakeBtn').style.display = 'inline-block';
-    document.getElementById('confirmBtn').style.display = 'inline-block';
+  } catch (err) {
+    console.error('Camera error:', err);
+    window.showToast?.('Error', 'Could not access camera. Please allow camera permissions.', 'error');
+  }
+}
+
+function stopCamera() {
+  if (KYCState.currentStream) {
+    KYCState.currentStream.getTracks().forEach(track => track.stop());
+    KYCState.currentStream = null;
+  }
+  KYCState.selfieDataUrl = null;
+}
+
+window.capturePhoto = () => {
+  const video = document.getElementById('cameraVideo');
+  const canvas = document.getElementById('cameraCanvas');
+  
+  if (!video || !canvas) return;
+  
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  
+  KYCState.selfieDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+  
+  video.style.display = 'none';
+  canvas.style.display = 'block';
+  
+  // Show/hide buttons
+  const captureBtn = document.getElementById('captureBtn');
+  const retakeBtn = document.getElementById('retakeBtn');
+  const confirmBtn = document.getElementById('confirmBtn');
+  
+  if (captureBtn) captureBtn.style.display = 'none';
+  if (retakeBtn) retakeBtn.style.display = 'inline-block';
+  if (confirmBtn) confirmBtn.style.display = 'inline-block';
 };
 
 window.retakePhoto = () => {
-    selfieDataUrl = null;
-    document.getElementById('cameraVideo').style.display = 'block';
-    document.getElementById('cameraCanvas').style.display = 'none';
-    document.getElementById('captureBtn').style.display = 'inline-block';
-    document.getElementById('retakeBtn').style.display = 'none';
-    document.getElementById('confirmBtn').style.display = 'none';
+  const video = document.getElementById('cameraVideo');
+  const canvas = document.getElementById('cameraCanvas');
+  
+  if (video) video.style.display = 'block';
+  if (canvas) canvas.style.display = 'none';
+  
+  KYCState.selfieDataUrl = null;
+  
+  // Show/hide buttons
+  const captureBtn = document.getElementById('captureBtn');
+  const retakeBtn = document.getElementById('retakeBtn');
+  const confirmBtn = document.getElementById('confirmBtn');
+  
+  if (captureBtn) captureBtn.style.display = 'inline-block';
+  if (retakeBtn) retakeBtn.style.display = 'none';
+  if (confirmBtn) confirmBtn.style.display = 'none';
 };
 
 window.confirmPhoto = () => {
-    window.closeCameraModal();
-    const preview = document.getElementById('selfiePreview');
-    const filename = document.getElementById('selfieFileName');
-    
-    preview.innerHTML = `<img src="${selfieDataUrl}" alt="Selfie Preview">`;
+  if (!KYCState.selfieDataUrl) return;
+  
+  const preview = document.getElementById('selfiePreview');
+  const filename = document.getElementById('selfieFileName');
+  
+  if (preview) {
+    preview.innerHTML = `<img src="${KYCState.selfieDataUrl}" alt="Selfie Preview">`;
     preview.classList.add('has-preview');
-    filename.textContent = "Selfie Captured Successfully";
-    window.showToast('Success', 'Selfie captured!');
+  }
+  if (filename) filename.textContent = 'selfie_capture.jpg';
+  
+  closeCameraModal();
+  window.showToast?.('Success', 'Selfie captured successfully');
 };
 
-// --- FILE UPLOADER ---
+// ==========================================
+// FILE HANDLING
+// ==========================================
+
 window.handleKYCFile = (input, previewId, filenameId) => {
-    const file = input.files[0];
-    if (!file) return;
-
-    // Check size (Max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-        window.showToast('Error', 'File too large. Max 5MB allowed.', 'error');
-        input.value = '';
-        return;
-    }
-
-    idFile = file; // Save to global variable
-    const preview = document.getElementById(previewId);
-    const filename = document.getElementById(filenameId);
-    
-    filename.textContent = file.name;
-
-    if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            preview.innerHTML = `<img src="${e.target.result}" alt="ID Preview">`;
-            preview.classList.add('has-preview');
-        };
-        reader.readAsDataURL(file);
-    } else {
-        preview.innerHTML = `<div class="file-icon"><i class="fas fa-file-pdf"></i><span>PDF Document</span></div>`;
+  const file = input.files[0];
+  if (!file) return;
+  
+  const validation = validateFile(file, {
+    maxSize: 5 * 1024 * 1024,
+    allowedTypes: ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf']
+  });
+  
+  if (!validation.valid) {
+    window.showToast?.('Error', validation.error, 'error');
+    input.value = '';
+    return;
+  }
+  
+  KYCState.idFile = file;
+  
+  const preview = document.getElementById(previewId);
+  const filename = document.getElementById(filenameId);
+  
+  if (filename) filename.textContent = file.name;
+  
+  if (file.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (preview) {
+        preview.innerHTML = `<img src="${e.target.result}" alt="ID Preview">`;
         preview.classList.add('has-preview');
+      }
+    };
+    reader.readAsDataURL(file);
+  } else {
+    if (preview) {
+      preview.innerHTML = `<div class="file-icon"><i class="fas fa-file-pdf"></i><span>PDF Document</span></div>`;
+      preview.classList.add('has-preview');
     }
+  }
 };
 
-window.openKYCModal = () => {
-    if (!auth.currentUser) return window.showToast('Error', 'Please login first', 'error');
-    if (window.currentUserData && window.currentUserData.isVerified) {
-        return window.showToast('Info', 'Your account is already verified!');
+// ==========================================
+// KYC MODAL
+// ==========================================
+
+window.openKYCModal = async () => {
+  if (!auth.currentUser) {
+    window.showToast?.('Error', 'Please login first', 'error');
+    return;
+  }
+  
+  // Check existing KYC status
+  try {
+    const existingKYC = await getUserKYC(auth.currentUser.uid);
+    
+    if (existingKYC) {
+      if (existingKYC.status === 'verified') {
+        window.showToast?.('Info', 'Your KYC is already verified');
+        return;
+      }
+      if (existingKYC.status === 'pending') {
+        window.showToast?.('Pending', 'Your KYC is under review', 'error');
+        return;
+      }
     }
-    document.getElementById('kycModal').classList.add('active');
+    
+    const modal = document.getElementById('kycModal');
+    if (modal) modal.classList.add('active');
+    
+  } catch (error) {
+    console.error('KYC check error:', error);
+    window.showToast?.('Error', 'Failed to check KYC status', 'error');
+  }
 };
 
 window.closeKYCModal = () => {
-    document.getElementById('kycModal').classList.remove('active');
+  const modal = document.getElementById('kycModal');
+  if (modal) modal.classList.remove('active');
 };
 
-// --- SUBMIT KYC TO FIREBASE CLOUD ---
-// Hintayin ma-load ang DOM bago i-attach ang event listener
-setTimeout(() => {
-    const kycForm = document.getElementById('kycForm');
-    if (kycForm) {
-        kycForm.addEventListener('submit', async (e) => {
-            e.preventDefault(); // Pigilan ang page refresh
-            
-            if (!auth.currentUser) return window.showToast('Error', 'Please login first', 'error');
-            if (!idFile) return window.showToast('Error', 'Please upload your ID document', 'error');
-            if (!selfieDataUrl) return window.showToast('Error', 'Please take a selfie with the camera', 'error');
+// ==========================================
+// KYC SUBMISSION
+// ==========================================
 
-            const btn = e.target.querySelector('.btn-submit');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading to Secure Server...';
-            btn.disabled = true;
+// Setup form submission listener
+document.addEventListener('DOMContentLoaded', () => {
+  const kycForm = document.getElementById('kycForm');
+  if (kycForm) {
+    kycForm.addEventListener('submit', handleKYCSubmit);
+  }
+});
 
-            try {
-                const uid = auth.currentUser.uid;
-                
-                // 1. I-upload ang ID Image sa Firebase Storage
-                const idRef = ref(storage, `kyc_documents/${uid}_id_${Date.now()}`);
-                await uploadBytes(idRef, idFile);
-                const idUrl = await getDownloadURL(idRef);
-
-                // 2. I-upload ang Selfie sa Firebase Storage
-                const selfieRef = ref(storage, `kyc_selfies/${uid}_selfie_${Date.now()}.jpg`);
-                await uploadString(selfieRef, selfieDataUrl, 'data_url');
-                const selfieUrl = await getDownloadURL(selfieRef);
-
-                // 3. I-save ang mga text details at Image URLs sa Firestore Database
-                await addDoc(collection(db, "kyc_submissions"), {
-                    userId: uid,
-                    fullName: document.getElementById('kycFullName').value,
-                    birthDate: document.getElementById('kycBirthDate').value,
-                    nationality: document.getElementById('kycNationality').value,
-                    idType: document.getElementById('kycIdType').value,
-                    idNumber: document.getElementById('kycIdNumber').value,
-                    address: document.getElementById('kycAddress').value,
-                    city: document.getElementById('kycCity').value,
-                    country: document.getElementById('kycCountry').value,
-                    phone: document.getElementById('kycPhone').value,
-                    idUrl: idUrl,          // Link papunta sa ID image
-                    selfieUrl: selfieUrl,  // Link papunta sa Selfie
-                    status: "pending",
-                    submittedAt: serverTimestamp()
-                });
-
-                // 4. Update UI para ipakita ang tagumpay
-                window.closeKYCModal();
-                window.showToast('Success', 'KYC application submitted securely!');
-                
-                const badge = document.getElementById('kycStatusBadge');
-                if(badge) {
-                    badge.className = 'kyc-badge pending';
-                    badge.innerHTML = '<i class="fas fa-clock"></i> Pending Approval';
-                }
-                const statusText = document.getElementById('kycStatusText');
-                if(statusText) {
-                    statusText.textContent = 'Your KYC application is under review by our admin team. This usually takes 24-48 hours.';
-                }
-
-            } catch (error) {
-                console.error("KYC Upload Error:", error);
-                window.showToast('Error', 'Failed to submit KYC: ' + error.message, 'error');
-            } finally {
-                // Ibalik sa dati ang button kahit mag-error o mag-success
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
-        });
+async function handleKYCSubmit(e) {
+  e.preventDefault();
+  
+  if (KYCState.isSubmitting) return;
+  
+  if (!auth.currentUser) {
+    window.showToast?.('Error', 'Please login first', 'error');
+    return;
+  }
+  
+  // Validate files
+  if (!KYCState.idFile) {
+    window.showToast?.('Error', 'Please upload your ID document', 'error');
+    return;
+  }
+  
+  if (!KYCState.selfieDataUrl) {
+    window.showToast?.('Error', 'Please take a selfie with the camera', 'error');
+    return;
+  }
+  
+  // Get form data
+  const formData = {
+    fullName: document.getElementById('kycFullName')?.value.trim(),
+    birthDate: document.getElementById('kycBirthDate')?.value,
+    nationality: document.getElementById('kycNationality')?.value,
+    idType: document.getElementById('kycIdType')?.value,
+    idNumber: document.getElementById('kycIdNumber')?.value.trim(),
+    address: document.getElementById('kycAddress')?.value.trim(),
+    city: document.getElementById('kycCity')?.value.trim(),
+    country: document.getElementById('kycCountry')?.value,
+    phone: document.getElementById('kycPhone')?.value.trim()
+  };
+  
+  // Validate required fields
+  const requiredFields = ['fullName', 'birthDate', 'nationality', 'idType', 'idNumber', 'address', 'city', 'country', 'phone'];
+  for (const field of requiredFields) {
+    if (!formData[field]) {
+      window.showToast?.('Error', 'Please fill in all required fields', 'error');
+      return;
     }
-}, 1000);
+  }
+  
+  KYCState.isSubmitting = true;
+  
+  const submitBtn = e.target.querySelector('.btn-submit');
+  const originalText = submitBtn?.innerHTML;
+  if (submitBtn) {
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+    submitBtn.disabled = true;
+  }
+  
+  try {
+    const uid = auth.currentUser.uid;
+    
+    // Upload ID document
+    window.showToast?.('Uploading', 'Uploading ID document...');
+    const idUpload = await uploadKYCDocument(uid, KYCState.idFile);
+    
+    if (!idUpload.success) {
+      throw new Error(idUpload.error || 'Failed to upload ID document');
+    }
+    
+    // Upload selfie
+    window.showToast?.('Uploading', 'Uploading selfie...');
+    const selfieUpload = await uploadKYCSelfie(uid, KYCState.selfieDataUrl);
+    
+    if (!selfieUpload.success) {
+      throw new Error(selfieUpload.error || 'Failed to upload selfie');
+    }
+    
+    // Submit KYC to Firestore
+    window.showToast?.('Submitting', 'Submitting KYC application...');
+    await submitKYC(uid, formData, idUpload.url, selfieUpload.url);
+    
+    // Success
+    window.closeKYCModal?.();
+    window.showToast?.('Success', 'KYC application submitted successfully!');
+    
+    // Update KYC badge
+    const badge = document.getElementById('kycStatusBadge');
+    const statusText = document.getElementById('kycStatusText');
+    
+    if (badge) {
+      badge.className = 'kyc-badge pending';
+      badge.innerHTML = '<i class="fas fa-clock"></i> Pending Approval';
+    }
+    if (statusText) {
+      statusText.textContent = 'Your KYC application is under review by our admin team. This usually takes 24-48 hours.';
+    }
+    
+    // Reset form
+    e.target.reset();
+    document.getElementById('idPreview')?.classList.remove('has-preview');
+    document.getElementById('selfiePreview')?.classList.remove('has-preview');
+    document.getElementById('idFileName').textContent = 'Upload ID (JPG, PNG, PDF)';
+    document.getElementById('selfieFileName').textContent = 'Take Selfie';
+    
+    KYCState.idFile = null;
+    KYCState.selfieDataUrl = null;
+    
+  } catch (error) {
+    console.error('KYC submission error:', error);
+    window.showToast?.('Error', error.message || 'Failed to submit KYC', 'error');
+  } finally {
+    KYCState.isSubmitting = false;
+    if (submitBtn) {
+      submitBtn.innerHTML = originalText;
+      submitBtn.disabled = false;
+    }
+  }
+}
