@@ -11,6 +11,7 @@
 </head>
 <body>
 
+    <!-- Header -->
     <header>
         <div class="header-spacer"></div>
         <div class="logo">
@@ -25,15 +26,19 @@
         </div>
     </header>
 
+    <!-- Menu Toggle -->
     <button class="menu-toggle" onclick="toggleMenu()">
         <i class="fas fa-bars"></i>
     </button>
 
+    <!-- Overlay -->
     <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
+    <!-- Side Menu -->
     <div id="sideMenu">
         <button class="close-menu" onclick="toggleMenu()"><i class="fas fa-times"></i></button>
         
+        <!-- Theme Toggle -->
         <button class="theme-toggle" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Theme">
             <i class="fas fa-moon" id="themeIcon"></i>
         </button>
@@ -45,6 +50,7 @@
             </div>
         </div>
 
+        <!-- Public Menu -->
         <div class="menu-section" id="publicMenu">
             <div class="menu-label">Explore</div>
             <a onclick="showPage('home')" class="active" id="nav-home">
@@ -61,6 +67,7 @@
             </a>
         </div>
 
+        <!-- Private Menu -->
         <div class="menu-section hidden" id="privateMenu">
             <div class="menu-label">Platform</div>
             <a onclick="showPage('asset')" id="nav-asset">
@@ -90,6 +97,7 @@
             </a>
         </div>
 
+        <!-- Account Menu -->
         <div class="menu-section hidden" id="accountMenu">
             <div class="menu-label">Account</div>
             <a onclick="showPage('account')" id="nav-account">
@@ -100,6 +108,7 @@
             </a>
         </div>
 
+        <!-- Login Menu -->
         <div class="menu-section" id="loginMenu">
             <a onclick="openAuthModal('login')" class="menu-login-btn">
                 <i class="fas fa-sign-in-alt"></i> Sign In
@@ -107,8 +116,10 @@
         </div>
     </div>
 
+    <!-- Main Content -->
     <div class="content-area">
         
+        <!-- HOME PAGE -->
         <div id="home" class="page active">
             <div class="hero">
                 <div class="hero-badge">
@@ -149,6 +160,7 @@
                 </div>
             </div>
 
+            <!-- Mission Section -->
             <div class="mission-section" id="publicMission">
                 <div class="section-header">
                     <h2>Mission & Vision</h2>
@@ -207,6 +219,7 @@
             </div>
         </div>
 
+        <!-- TOKENOMICS PAGE -->
         <div id="tokenomics" class="page">
             <div class="card">
                 <div class="card-header">
@@ -273,6 +286,7 @@
             </div>
         </div>
 
+        <!-- FAQ PAGE -->
         <div id="faq" class="page">
             <div class="card">
                 <div class="card-header">
@@ -363,6 +377,7 @@
             </div>
         </div>
 
+        <!-- WHITEPAPER PAGE -->
         <div id="whitepaper" class="page">
             <div class="card">
                 <div class="card-header">
@@ -452,6 +467,7 @@
             </div>
         </div>
 
+        <!-- PCH WALLET PAGE -->
         <div id="asset" class="page">
             <div class="dashboard-header">
                 <div class="welcome-text">
@@ -460,6 +476,7 @@
                 </div>
             </div>
 
+            <!-- Wallet Security Notice -->
             <div class="wallet-security-notice">
                 <i class="fas fa-shield-alt"></i>
                 <div class="security-text">
@@ -468,6 +485,7 @@
                 </div>
             </div>
 
+            <!-- Unlock Buttons -->
             <div class="unlock-buttons" id="unlockButtons">
                 <button class="unlock-btn passphrase" onclick="unlockWithPassphrase()">
                     <i class="fas fa-key"></i>
@@ -479,6 +497,7 @@
                 </button>
             </div>
 
+            <!-- Wallet Content (Hidden until unlocked) -->
             <div class="wallet-content hidden" id="walletContent">
                 <div class="asset-overview">
                     <div class="asset-card main-balance">
@@ -520,6 +539,7 @@
                 </div>
             </div>
 
+            <!-- Locked State -->
             <div class="wallet-locked-state" id="walletLockedState">
                 <div class="locked-icon">
                     <i class="fas fa-lock"></i>
@@ -529,6 +549,7 @@
             </div>
         </div>
 
+        <!-- STAKING PRO PAGE -->
         <div id="staking" class="page">
             <div class="dashboard-header">
                 <div class="welcome-text">
@@ -639,6 +660,7 @@
             </div>
         </div>
 
+        <!-- MARKET PAGE -->
         <div id="market" class="page">
             <div class="dashboard-header">
                 <div class="welcome-text">
@@ -686,6 +708,7 @@
             </div>
         </div>
 
+        <!-- AIRDROP PAGE -->
         <div id="airdrop" class="page">
             <div class="dashboard-header">
                 <div class="welcome-text">
@@ -694,7 +717,9 @@
                 </div>
             </div>
 
+            <!-- Unified Glass Frame -->
             <div class="unified-airdrop-frame">
+                <!-- Daily Attendance -->
                 <div class="attendance-section">
                     <div class="attendance-header">
                         <i class="fas fa-calendar-check"></i>
@@ -725,6 +750,7 @@
 
                 <div class="frame-divider"></div>
 
+                <!-- Invite Friends -->
                 <div class="referral-section">
                     <div class="referral-header">
                         <i class="fas fa-user-plus"></i>
@@ -759,6 +785,7 @@
 
                 <div class="frame-divider"></div>
 
+                <!-- Social Airdrop -->
                 <div class="social-airdrop-section">
                     <div class="social-header">
                         <i class="fas fa-share-alt"></i>
@@ -805,6 +832,7 @@
                 </div>
             </div>
 
+            <!-- Leaderboard -->
             <div class="leaderboard-section" id="leaderboardSection">
                 <div class="leaderboard-header">
                     <i class="fas fa-trophy"></i>
@@ -817,8 +845,7 @@
                     <button class="leaderboard-tab" onclick="switchLeaderboard('referrers')">Top Referrers</button>
                 </div>
 
-                <div class="leaderboard-list" id="leaderboardList">
-                    </div>
+                <div class="leaderboard-list" id="leaderboardList"></div>
                 
                 <div class="leaderboard-placeholder" id="leaderboardPlaceholder">
                     <i class="fas fa-trophy"></i>
@@ -828,6 +855,7 @@
             </div>
         </div>
 
+        <!-- ACCOUNT PAGE -->
         <div id="account" class="page">
             <div class="dashboard-header">
                 <div class="welcome-text">
@@ -836,6 +864,7 @@
                 </div>
             </div>
 
+            <!-- KYC Section -->
             <div class="kyc-section">
                 <div class="kyc-header">
                     <h3><i class="fas fa-id-card"></i> KYC Verification</h3>
@@ -851,7 +880,7 @@
                     <i class="fas fa-shield-alt"></i> Complete KYC
                 </button>
                 
-                <div id="kycSubmitted" style="display: none;"></div>
+                <div id="kycSubmittedView" style="display: none;"></div>
             </div>
 
             <div class="card">
@@ -902,6 +931,7 @@
             </div>
         </div>
 
+        <!-- SUPPORT PAGE -->
         <div id="support" class="page">
             <div class="card">
                 <div class="card-header">
@@ -935,6 +965,7 @@
             </div>
         </div>
 
+        <!-- TERMS PAGE -->
         <div id="terms" class="page">
             <div class="card">
                 <div class="card-header">
@@ -971,36 +1002,9 @@
         </div>
     </div>
 
-    <div class="modal" id="walletModal">
-        <div class="modal-content">
-            <button class="close-modal" onclick="closeWalletModal()"><i class="fas fa-times"></i></button>
-            <div class="modal-header">
-                <h3 class="modal-title">Connect Wallet</h3>
-                <p class="modal-subtitle">Choose your preferred wallet provider</p>
-            </div>
-            <div class="modal-body">
-                <div class="wallet-grid">
-                    <div class="wallet-option" onclick="connectWallet('metamask')">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22><rect fill=%22%23f6851b%22 width=%2240%22 height=%2240%22 rx=%228%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23fff%22 font-size=%2214%22>MM</text></svg>'">
-                        <div>MetaMask</div>
-                    </div>
-                    <div class="wallet-option" onclick="connectWallet('okx')">
-                        <img src="https://www.okx.com/cdn/assets/imgs/247/58E1F9F55D3E34C3.png" alt="OKX" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22><rect fill=%22%23000%22 width=%2240%22 height=%2240%22 rx=%228%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23fff%22 font-size=%2214%22>OKX</text></svg>'">
-                        <div>OKX Wallet</div>
-                    </div>
-                    <div class="wallet-option" onclick="connectWallet('phantom')">
-                        <img src="https://phantom.app/img/phantom-logo.svg" alt="Phantom" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22><rect fill=%22%23534ff%22 width=%2240%22 height=%2240%22 rx=%228%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23fff%22 font-size=%2214%22>PH</text></svg>'">
-                        <div>Phantom</div>
-                    </div>
-                    <div class="wallet-option" onclick="connectWallet('walletconnect')">
-                        <img src="https://raw.githubusercontent.com/WalletConnect/walletconnect-assets/master/Logo/Blue%20(Default)/Logo.svg" alt="WalletConnect" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22><rect fill=%22%233b99fc%22 width=%2240%22 height=%2240%22 rx=%228%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23fff%22 font-size=%2214%22>WC</text></svg>'">
-                        <div>WalletConnect</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- MODALS -->
 
+    <!-- Auth Modal -->
     <div class="modal" id="authModal">
         <div class="modal-content">
             <button class="close-modal" onclick="closeAuthModal()"><i class="fas fa-times"></i></button>
@@ -1012,8 +1016,8 @@
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
-                        <label>Email or Username</label>
-                        <input type="text" class="form-input" id="loginEmail" placeholder="Enter your email">
+                        <label>Email</label>
+                        <input type="email" class="form-input" id="loginEmail" placeholder="Enter your email">
                     </div>
                     <div class="form-group">
                         <label>Password</label>
@@ -1024,7 +1028,7 @@
                             </button>
                         </div>
                     </div>
-                    <div class="error-msg" id="loginError">Invalid credentials</div>
+                    <div class="error-msg" id="loginError"></div>
                     <button class="btn-submit" onclick="handleLogin()">Sign In</button>
                     <div class="auth-switch">
                         Don't have an account? <a onclick="switchAuth('signup')">Create one</a>
@@ -1073,7 +1077,7 @@
                     <div class="form-group">
                         <label>Password</label>
                         <div class="password-wrapper">
-                            <input type="password" class="form-input" id="regPassword" placeholder="Min 8 characters">
+                            <input type="password" class="form-input" id="regPassword" placeholder="Min 6 characters">
                             <button class="toggle-password" onclick="togglePassword('regPassword', this)">
                                 <i class="fas fa-eye"></i>
                             </button>
@@ -1104,6 +1108,38 @@
         </div>
     </div>
 
+    <!-- Wallet Modal -->
+    <div class="modal" id="walletModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeWalletModal()"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <h3 class="modal-title">Connect Wallet</h3>
+                <p class="modal-subtitle">Choose your preferred wallet provider</p>
+            </div>
+            <div class="modal-body">
+                <div class="wallet-grid">
+                    <div class="wallet-option" onclick="connectWallet('metamask')">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask">
+                        <div>MetaMask</div>
+                    </div>
+                    <div class="wallet-option" onclick="connectWallet('okx')">
+                        <div class="wallet-icon" style="background: #000;">OKX</div>
+                        <div>OKX Wallet</div>
+                    </div>
+                    <div class="wallet-option" onclick="connectWallet('phantom')">
+                        <div class="wallet-icon" style="background: #534fff;">PH</div>
+                        <div>Phantom</div>
+                    </div>
+                    <div class="wallet-option" onclick="connectWallet('walletconnect')">
+                        <div class="wallet-icon" style="background: #3b99fc;">WC</div>
+                        <div>WalletConnect</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Passphrase Modal -->
     <div class="modal" id="passphraseModal">
         <div class="modal-content">
             <button class="close-modal" onclick="closePassphraseModal()"><i class="fas fa-times"></i></button>
@@ -1119,7 +1155,7 @@
                 <div class="form-group">
                     <label>Wallet Passphrase</label>
                     <div class="password-wrapper">
-                        <input type="password" class="form-input" id="walletPassphrase" placeholder="Enter your 12 or 24-word passphrase">
+                        <input type="password" class="form-input" id="walletPassphrase" placeholder="Enter your passphrase">
                         <button class="toggle-password" onclick="togglePassword('walletPassphrase', this)">
                             <i class="fas fa-eye"></i>
                         </button>
@@ -1132,6 +1168,7 @@
         </div>
     </div>
 
+    <!-- Deposit Modal -->
     <div class="modal" id="depositModal">
         <div class="modal-content">
             <button class="close-modal" onclick="closeDepositModal()"><i class="fas fa-times"></i></button>
@@ -1174,6 +1211,7 @@
         </div>
     </div>
 
+    <!-- Withdraw Options Modal -->
     <div class="modal" id="withdrawOptionsModal">
         <div class="modal-content">
             <button class="close-modal" onclick="closeWithdrawOptionsModal()"><i class="fas fa-times"></i></button>
@@ -1211,6 +1249,7 @@
         </div>
     </div>
 
+    <!-- P2P Modal -->
     <div class="modal" id="p2pModal">
         <div class="modal-content">
             <button class="close-modal" onclick="closeP2PModal()"><i class="fas fa-times"></i></button>
@@ -1271,181 +1310,7 @@
         </div>
     </div>
 
-    <div class="modal" id="withdrawCryptoModal">
-        <div class="modal-content">
-            <button class="close-modal" onclick="closeWithdrawCryptoModal()"><i class="fas fa-times"></i></button>
-            <div class="modal-header">
-                <h3 class="modal-title"><i class="fas fa-wallet"></i> Withdraw Crypto</h3>
-                <p class="modal-subtitle">Transfer crypto to a wallet or Exchange</p>
-            </div>
-            <div class="modal-body">
-                <div class="wallet-status-box" id="withdrawWalletStatus">
-                    <i class="fas fa-wallet"></i>
-                    <div class="wallet-status-text">
-                        <span id="withdrawWalletText">No wallet connected</span>
-                        <button class="btn-primary btn-small" onclick="connectWalletForWithdraw()">Connect Wallet</button>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Withdrawal Amount</label>
-                    <input type="number" class="form-input" id="withdrawAmount" placeholder="0.00">
-                    <div class="input-meta">
-                        <span class="balance-display">Available: <span id="withdrawAvailableBalance">0.00</span> PCH</span>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Destination Address</label>
-                    <input type="text" class="form-input" id="withdrawAddress" placeholder="0x..." readonly>
-                </div>
-
-                <div class="withdraw-fee-info">
-                    <div class="fee-row">
-                        <span>Network Fee</span>
-                        <span>0.5 PCH</span>
-                    </div>
-                    <div class="fee-row total">
-                        <span>Total Deduction</span>
-                        <span id="totalDeduction">0.00 PCH</span>
-                    </div>
-                </div>
-                
-                <button class="btn-submit" id="withdrawSubmitBtn" onclick="executeWithdraw()" disabled>
-                    Connect Wallet to Withdraw
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal" id="sendModal">
-        <div class="modal-content">
-            <button class="close-modal" onclick="closeSendModal()"><i class="fas fa-times"></i></button>
-            <div class="modal-header">
-                <h3 class="modal-title">Send PCH</h3>
-                <p class="modal-subtitle">Transfer tokens to another wallet</p>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>Recipient Address</label>
-                    <input type="text" class="form-input" id="sendAddress" placeholder="0x...">
-                </div>
-                <div class="form-group">
-                    <label>Amount</label>
-                    <input type="number" class="form-input" id="sendAmount" placeholder="0.00">
-                    <div class="input-meta">
-                        <span class="balance-display">Available: <span id="sendAvailableBalance">0.00</span> PCH</span>
-                    </div>
-                </div>
-                <button class="btn-submit" onclick="executeSend()">Send Tokens</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal" id="convertModal">
-        <div class="modal-content">
-            <button class="close-modal" onclick="closeConvertModal()"><i class="fas fa-times"></i></button>
-            <div class="modal-header">
-                <h3 class="modal-title"><i class="fas fa-exchange-alt"></i> Convert</h3>
-                <p class="modal-subtitle">Quick and easy crypto conversion</p>
-            </div>
-            <div class="modal-body">
-                <div class="convert-presets">
-                    <label>Quick Amounts</label>
-                    <div class="preset-buttons">
-                        <button onclick="setConvertAmount(100)">100 PCH</button>
-                        <button onclick="setConvertAmount(500)">500 PCH</button>
-                        <button onclick="setConvertAmount(1000)">1000 PCH</button>
-                        <button onclick="setConvertAmount(5000)">5000 PCH</button>
-                    </div>
-                </div>
-
-                <div class="convert-card">
-                    <div class="convert-input-section">
-                        <div class="convert-label-row">
-                            <label>From</label>
-                            <span class="convert-balance">Balance: <span id="convertFromBalance">0.00</span> PCH</span>
-                        </div>
-                        <div class="convert-input-row">
-                            <input type="number" class="convert-amount-input" id="convertFromAmount" placeholder="0.00" oninput="updateConvertRates()">
-                            <div class="convert-currency-select">
-                                <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24'><circle fill='%2300c2ff' cx='12' cy='12' r='12'/><text x='50%' y='50%' text-anchor='middle' dy='.3em' fill='%23000' font-size='10'>PCH</text></svg>" alt="PCH">
-                                <span>PCH</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="convert-swap-btn" onclick="swapConvertDirection()">
-                        <i class="fas fa-exchange-alt"></i>
-                    </div>
-
-                    <div class="convert-input-section">
-                        <div class="convert-label-row">
-                            <label>To</label>
-                        </div>
-                        <div class="convert-input-row">
-                            <input type="number" class="convert-amount-input" id="convertToAmount" placeholder="0.00" readonly>
-                            <select class="convert-currency-dropdown" id="convertToCurrency" onchange="updateConvertRates()">
-                                <option value="USDT">USDT</option>
-                                <option value="USDC">USDC</option>
-                                <option value="BTC">BTC</option>
-                                <option value="ETH">ETH</option>
-                                <option value="SOL">SOL</option>
-                                <option value="XRP">XRP</option>
-                                <option value="POL">POL</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="convert-rate-card">
-                    <div class="rate-row">
-                        <span>Exchange Rate</span>
-                        <span id="convertRateText">1 PCH = $0.045 USDT</span>
-                    </div>
-                    <div class="rate-row">
-                        <span>Network Fee</span>
-                        <span>0.1 PCH</span>
-                    </div>
-                    <div class="rate-row total">
-                        <span>You Receive</span>
-                        <span id="convertReceiveAmount">0.00 USDT</span>
-                    </div>
-                </div>
-                
-                <button class="btn-submit convert-btn" onclick="executeConvert()">
-                    <i class="fas fa-bolt"></i> Convert Now
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal" id="bugModal">
-        <div class="modal-content">
-            <button class="close-modal" onclick="closeBugModal()"><i class="fas fa-times"></i></button>
-            <div class="modal-header">
-                <h3 class="modal-title">Report Bug</h3>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>Issue Type</label>
-                    <select class="form-input" id="bugType">
-                        <option>UI/Display Issue</option>
-                        <option>Wallet Connection</option>
-                        <option>Staking Problem</option>
-                        <option>Transaction Failed</option>
-                        <option>Other</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Description</label>
-                    <textarea id="bugDesc" placeholder="Describe the issue..."></textarea>
-                </div>
-                <button class="btn-submit" onclick="submitBug()">Submit Report</button>
-            </div>
-        </div>
-    </div>
-
+    <!-- KYC Modal -->
     <div class="modal" id="kycModal">
         <div class="modal-content" style="max-width: 500px;">
             <button class="close-modal" onclick="closeKYCModal()"><i class="fas fa-times"></i></button>
@@ -1458,18 +1323,18 @@
                     <div class="kyc-form-row">
                         <div class="form-group">
                             <label>Full Name (as per ID)</label>
-                            <input type="text" class="form-input" id="kycFullName" placeholder="John Doe">
+                            <input type="text" class="form-input" id="kycFullName" placeholder="John Doe" required>
                         </div>
                         <div class="form-group">
                             <label>Date of Birth</label>
-                            <input type="date" class="form-input" id="kycBirthDate">
+                            <input type="date" class="form-input" id="kycBirthDate" required>
                         </div>
                     </div>
                     
                     <div class="kyc-form-row">
                         <div class="form-group">
                             <label>Nationality</label>
-                            <select class="form-input" id="kycNationality">
+                            <select class="form-input" id="kycNationality" required>
                                 <option value="">Select Country</option>
                                 <option value="US">United States</option>
                                 <option value="UK">United Kingdom</option>
@@ -1484,7 +1349,7 @@
                         </div>
                         <div class="form-group">
                             <label>ID Type</label>
-                            <select class="form-input" id="kycIdType">
+                            <select class="form-input" id="kycIdType" required>
                                 <option value="">Select ID Type</option>
                                 <option value="passport">Passport</option>
                                 <option value="drivers_license">Driver's License</option>
@@ -1495,22 +1360,22 @@
                     
                     <div class="form-group">
                         <label>ID Number</label>
-                        <input type="text" class="form-input" id="kycIdNumber" placeholder="Enter ID number">
+                        <input type="text" class="form-input" id="kycIdNumber" placeholder="Enter ID number" required>
                     </div>
                     
                     <div class="form-group">
                         <label>Address</label>
-                        <input type="text" class="form-input" id="kycAddress" placeholder="Street address">
+                        <input type="text" class="form-input" id="kycAddress" placeholder="Street address" required>
                     </div>
                     
                     <div class="kyc-form-row">
                         <div class="form-group">
                             <label>City</label>
-                            <input type="text" class="form-input" id="kycCity" placeholder="City">
+                            <input type="text" class="form-input" id="kycCity" placeholder="City" required>
                         </div>
                         <div class="form-group">
                             <label>Country</label>
-                            <select class="form-input" id="kycCountry">
+                            <select class="form-input" id="kycCountry" required>
                                 <option value="">Select Country</option>
                                 <option value="US">United States</option>
                                 <option value="UK">United Kingdom</option>
@@ -1527,7 +1392,7 @@
                     
                     <div class="form-group">
                         <label>Phone Number</label>
-                        <input type="tel" class="form-input" id="kycPhone" placeholder="+1 234 567 8900">
+                        <input type="tel" class="form-input" id="kycPhone" placeholder="+1 234 567 8900" required>
                     </div>
                     
                     <div class="kyc-form-row">
@@ -1544,7 +1409,6 @@
                         <div class="form-group">
                             <label>Selfie with ID</label>
                             <div class="kyc-file-upload" onclick="openCameraModal()">
-                                <input type="file" id="kycSelfieFile" accept="image/*" style="display: none;" onchange="handleKYCFile(this, 'selfiePreview', 'selfieFileName')">
                                 <div class="file-upload-icon"><i class="fas fa-camera"></i></div>
                                 <div class="file-upload-text" id="selfieFileName">Take Selfie</div>
                                 <div class="file-upload-hint">Click to open camera</div>
@@ -1563,6 +1427,7 @@
         </div>
     </div>
 
+    <!-- Camera Modal -->
     <div class="modal" id="cameraModal">
         <div class="modal-content" style="max-width: 500px;">
             <button class="close-modal" onclick="closeCameraModal()"><i class="fas fa-times"></i></button>
@@ -1594,6 +1459,7 @@
         </div>
     </div>
 
+    <!-- Toast Notification -->
     <div class="toast" id="toast">
         <i class="fas fa-check-circle toast-icon"></i>
         <div class="toast-content">
@@ -1602,9 +1468,9 @@
         </div>
     </div>
 
+    <!-- Scripts -->
     <script type="module" src="firebase-config.js"></script>
-    <script type="module" src="web3.js"></script>
-    <script type="module" src="script.js"></script>
+    <script type="module" src="app.js"></script>
     <script type="module" src="kyc.js"></script>
 </body>
 </html>
